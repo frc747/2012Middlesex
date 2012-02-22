@@ -3,6 +3,7 @@
 package edu.wpi.first.wpilibj.templates;
 
 import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.buttons.DigitalIOButton;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -15,6 +16,7 @@ public class RobotTemplate extends RobotBase {
     // Declare variables
     int mode;
     int drivePercent;
+    double operatorAxisY;
     
     //robot drive system
     RobotDrive robotDrive;
@@ -31,6 +33,9 @@ public class RobotTemplate extends RobotBase {
     // output to driver console
     DriverStationLCD dsLCD;
 
+    //Encoder
+    Encoder encoder;
+    
     // Declare variables for the 3 joysticks (right/left for tank, 3rd stick for the operator
     Joystick rightStick, leftStick, operatorStick;
     
@@ -39,12 +44,22 @@ public class RobotTemplate extends RobotBase {
     DigitalInput liftLimit2;
     DigitalInput liftLimit3;
     DigitalInput liftLimit4;
+    DigitalInput finLimit1;
+    DigitalInput finLimit2;
+    DigitalInput batteryLimit1;
+    DigitalInput batteryLimit2;
     
     //drive motors
-    Victor driveMotor1;
-    Victor driveMotor2;
-    Victor driveMotor3;
-    Victor driveMotor4;
+    Victor frontLeftMotor;
+    Victor rearLeftMotor;
+    Victor frontRightMotor;
+    Victor rearRightMotor;
+    
+    //fin motor
+    Victor finMotor;
+    
+    //battery motor
+    Victor batteryMotor;
     
     //lift motors
     Jaguar liftMotor1;
@@ -110,17 +125,24 @@ public class RobotTemplate extends RobotBase {
         operatorStick = new Joystick(3);
         
         //setup drive speed controllers
-        driveMotor1 = new Victor(1);
-        driveMotor2 = new Victor(2);
-        driveMotor3 = new Victor(3);
-        driveMotor4 = new Victor(4);
+        frontLeftMotor = new Victor(1);
+        rearLeftMotor = new Victor(2);
+        frontRightMotor = new Victor(4);
+        rearRightMotor = new Victor(5);
+        
+        //setup fin speed controller
+        finMotor = new Victor(6);
+        
+        //setup battery speed controller
+        batteryMotor = new Victor(3);
+        operatorAxisY = operatorStick.getAxis(Joystick.AxisType.kY);
         
         //setup robot drive class with our drive speed controllers
-        robotDrive = new RobotDrive(driveMotor1, driveMotor2, driveMotor3, driveMotor4);
+        robotDrive = new RobotDrive(frontLeftMotor, rearLeftMotor, frontRightMotor, rearRightMotor);
         
         //setup lift speed controllers
-        liftMotor1 = new Jaguar(5);
-        liftMotor2 = new Jaguar(6);
+        liftMotor1 = new Jaguar(7);
+        liftMotor2 = new Jaguar(9);
 
         // must get instance of these because you are not creating it
         // it already exists and we need to access it in our program
@@ -129,6 +151,9 @@ public class RobotTemplate extends RobotBase {
 
         // get the driver station instance
         dsLCD = DriverStationLCD.getInstance();
+        
+        //encoder
+        encoder = new Encoder(9,10);
 
         // get the camera instance
         //camera = AxisCamera.getInstance();
@@ -141,6 +166,14 @@ public class RobotTemplate extends RobotBase {
         liftLimit2 = new DigitalInput(2);
         liftLimit3 = new DigitalInput(3);
         liftLimit4 = new DigitalInput(4);
+        
+        //fin limits
+        finLimit1 = new DigitalInput(5);
+        finLimit2 = new DigitalInput(6);
+        
+        //battery limits
+        batteryLimit1 = new DigitalInput(7);
+        batteryLimit2 = new DigitalInput(8);
         
         //2Gs of force gives us the most resolution at low forces
         //which is what we will be dealing with balancing
@@ -155,10 +188,10 @@ public class RobotTemplate extends RobotBase {
     
     //set our drive motor bounds uniformly
     private void setDriveBounds(int max, int deadbandMax, int center, int deadbandMin, int min) {
-        driveMotor1.setBounds(max,deadbandMax,center,deadbandMin,min);
-        driveMotor3.setBounds(max,deadbandMax,center,deadbandMin,min);
-        driveMotor2.setBounds(max,deadbandMax,center,deadbandMin,min);
-        driveMotor4.setBounds(max,deadbandMax,center,deadbandMin,min);
+        frontLeftMotor.setBounds(max,deadbandMax,center,deadbandMin,min);
+        rearLeftMotor.setBounds(max,deadbandMax,center,deadbandMin,min);
+        frontRightMotor.setBounds(max,deadbandMax,center,deadbandMin,min);
+        rearRightMotor.setBounds(max,deadbandMax,center,deadbandMin,min);
     }
     
     //set our drive motor bounds by percent uniformly and drive the robot
@@ -175,9 +208,17 @@ public class RobotTemplate extends RobotBase {
         robotDrive.tankDrive(leftStick, rightStick);
     }
     
-    private void setLiftMotors(int val) {
-        liftMotor1.set(val);
-        liftMotor2.set(val);
+    private void setLiftMotors(String direction) {
+        if(direction.equals("up")){
+            liftMotor1.set(1);
+            liftMotor2.set(1);
+        } else if (direction.equals("down")){
+             liftMotor1.set(-1);
+             liftMotor2.set(-1);
+        } else {
+            liftMotor1.set(0);
+            liftMotor2.set(0);
+        }
     }
     
     //initalize functions on the robot like turning on an air compressor
@@ -195,8 +236,16 @@ public class RobotTemplate extends RobotBase {
         {
             ADXL345_I2C.AllAxes axises = accel.getAccelerations();
             dsPrint(3,axises.XAxis+" "+axises.YAxis+" "+axises.ZAxis);
-            double gyroValue = gyro.getAngle();
-            dsPrint(4,Double.toString(gyroValue));
+            //double gyroValue = gyro.getAngle();
+            double leftValue = leftStick.getY(GenericHID.Hand.kLeft);
+            double rightValue = rightStick.getY(GenericHID.Hand.kRight);
+            boolean limit1 = this.liftLimit1.get();
+            boolean limit2 = this.liftLimit2.get();
+            boolean limit3 = this.liftLimit3.get();
+            boolean limit4 = this.liftLimit4.get();
+            dsPrint(4,Double.toString(leftValue));
+            dsPrint(5,Double.toString(rightValue));
+            dsPrint(6,"1: "+(limit1?"1":"0")+" 2: "+(limit2?"1":"0")+" 3: "+(limit3?"1":"0")+" 4: "+(limit4?"1":"0"));
         }
         
         // actually print all of the dsPrint strings, send to driver computer
@@ -225,13 +274,46 @@ public class RobotTemplate extends RobotBase {
         
         //lift code
         //TODO: prototype limit switch and lift motor values, most likely will change when testing
-        if (rightStick.getRawButton(3) == true && liftLimit1.get() && liftLimit2.get() ) {
-            setLiftMotors(255);
-        } else if (rightStick.getRawButton(4) == true && liftLimit3.get() && liftLimit4.get() ) {
-            setLiftMotors(0);
+        if (rightStick.getRawButton(3) && (!liftLimit1.get() || !liftLimit3.get())) {
+            setLiftMotors("up");
+        } else if (rightStick.getRawButton(2) && (!liftLimit2.get() || !liftLimit4.get())) {
+            setLiftMotors("down");
         } else {
-            setLiftMotors(127);
+            setLiftMotors("nothing");
         }
+        
+        //fin code
+        /*if (operatorStick.getRawButton(10) == false){*/
+            if (operatorStick.getRawButton(3) && (finLimit1.get())){
+                finMotor.set(1);
+            } else if (operatorStick.getRawButton(2) && (finLimit2.get())){
+                finMotor.set(-1);
+            } else {
+                finMotor.set(0);
+            }
+        /*} else {
+            if (operatorStick.getRawButton(3) && (!finLimit1.get())){
+                finMotor.set(1);
+                if (finLimit1.get()){
+                    finMotor.set(0);
+                }
+            }
+            if (operatorStick.getRawButton(2) && (!finLimit2.get())){
+                finMotor.set(-1);
+                if (finLimit2.get()){
+                    finMotor.set(0);
+                }
+            } 
+         }*/
+        
+         //battery code
+         if (operatorStick.getRawButton(5) && (batteryLimit1.get())){
+             batteryMotor.set(1);
+         } else if (operatorStick.getRawButton(4) && (batteryLimit2.get())){
+             batteryMotor.set(-1);
+         } else {
+             batteryMotor.set(0);
+         }
     }
 
     //main function from our perspective, this is what the robot calls when starting
