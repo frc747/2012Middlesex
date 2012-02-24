@@ -13,7 +13,6 @@ import edu.wpi.first.wpilibj.*;
 public class RobotTemplate extends RobotBase {
     // Declare variables
     int mode;
-    int drivePercent, batteryPercent;
     String autoDrive, autoOperate;
     RobotDrive robotDrive;
     DriverStation ds;
@@ -39,8 +38,6 @@ public class RobotTemplate extends RobotBase {
         
         //variables
         mode = -1;
-        drivePercent = 100;
-        batteryPercent = 100;
         
         autoDrive = null;
         autoOperate = null;
@@ -172,16 +169,10 @@ public class RobotTemplate extends RobotBase {
     
     //set our drive motor bounds by percent uniformly and drive the robot
     private void drive(int percent) {
-        //if our new percent is different than our current one change our bounds
-        if(percent!=drivePercent) {
-            drivePercent = percent;
-            int value = 127*drivePercent/100;
-            setDriveBounds(128+value,128,127,126,127-value);
-        }
         //tell the driver the current drive percentage
-        dsPrint(3, drivePercent+"% speed");
+        dsPrint(3, percent+"% speed");
         //take joystick inputs and drive the robot
-        robotDrive.tankDrive(leftStick, rightStick);
+        robotDrive.tankDrive((leftStick.getY()/(percent/100)), (rightStick.getY()/(percent/100)));
         
         //autolift
         if(autoDrive != null){
@@ -199,16 +190,10 @@ public class RobotTemplate extends RobotBase {
     
     //set our drive motor bounds by percent uniformly and drive the robot
     private void driveBattery(int percent) {
-        //if our new percent is different than our current one change our bounds
-        if(percent!=batteryPercent) {
-            batteryPercent = percent;
-            int value = 127*batteryPercent/100;
-            batteryMotor.setBounds(128+value,128,127,126,127-value);
-        }
         //tell the driver the current drive percentage
-        dsPrint(4, batteryPercent+"% speed");
+        dsPrint(4, percent+"% speed");
         //take joystick inputs and drive the robot
-        batteryMotor.set(operatorStick.getY());
+        batteryMotor.set(operatorStick.getY()/(percent/100));
     }
     
     private void setLiftMotors(String direction) {
