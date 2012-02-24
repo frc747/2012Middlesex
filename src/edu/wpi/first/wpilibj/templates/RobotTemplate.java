@@ -290,7 +290,7 @@ public class RobotTemplate extends RobotBase {
     //do this while we are disabled
     protected void disabled() {
         // kill movement
-        robotDrive.drive(0, 0);
+        robotDrive.drive(0,0);
         setLiftMotors("off");
         setFinMotor("off");
         batteryMotor.set(0);
@@ -298,7 +298,10 @@ public class RobotTemplate extends RobotBase {
 
     //run autonomous code for begining of match
     protected void autonomous() {
-        disabled();
+        while(this.stopwatch.get() < 5) {
+            robotDrive.drive(1,0); //forward
+            setFinMotor("fwd"); //push the fin all the way forward
+        }
     }
 
     //run code for drivers
