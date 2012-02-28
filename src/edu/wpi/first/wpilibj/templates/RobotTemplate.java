@@ -506,10 +506,10 @@ public class RobotTemplate extends RobotBase {
         //auto balance code operator and driver must agree to go?!
         //Bunca should we do this? or just have the operator/driver control it
 //        if(operatorStick.getRawButton(10) && rightStick.getRawButton(10)){
-//            if(balancing==0) {
-//                balancing = 1;
-//            } else if(balancing==2) {
-//                balancing = 3;
+//            if(balancing==BALANCED) {
+//                balancing = STARTUP;
+//            } else if(balancing==READY) {
+//                balancing = GO;
 //            }
 //        }
 //        
