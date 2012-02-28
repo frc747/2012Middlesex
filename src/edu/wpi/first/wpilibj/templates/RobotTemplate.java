@@ -2,6 +2,8 @@
 package edu.wpi.first.wpilibj.templates;
 
 import edu.wpi.first.wpilibj.*;
+import java.util.Enumeration;
+import java.util.Hashtable;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -11,9 +13,22 @@ import edu.wpi.first.wpilibj.*;
  * directory.
  */
 public class RobotTemplate extends RobotBase {
+    //Constants
+    int AUTOOFF = 869; //needed a magic value other than -1, 0, and 1
+    int STOP = 0;
+    int FWD = 1;
+    int BACK = -1;
+    int UP = 1;
+    int DWN = -1;
+    
+    int BALANCED = 0;
+    int STARTUP = 1;
+    int READY = 2;
+    int GO = 3;
+    
     // Declare variables SO MANY VARIABLES!!!
     int mode;
-    String autoDrive, autoOperate;
+    int autoDrive, autoOperate, balancing;
     RobotDrive robotDrive;
     DriverStation ds;
     Timer stopwatch;
@@ -30,13 +45,11 @@ public class RobotTemplate extends RobotBase {
     ADXL345_I2C accel;
     Gyro gyro;
     Encoder batteryEncoder;
-    Encoder finEncoder;
-    double smoothed;
-    int smoothing;
-    double lastUpdate;
-    double balanceVal;
-    String balancing;
-    double calibrationTime;
+    int smoothing, loop;
+    double smoothed, lastUpdate, balanceVal, precision;
+    boolean calibrating;
+    Hashtable rate;
+    double gryoOffset;
 
     // constructor for robot variables
     public RobotTemplate() {
@@ -45,15 +58,17 @@ public class RobotTemplate extends RobotBase {
         //variables
         mode = -1;
         
-        autoDrive = null;
-        autoOperate = null;
-        balancing = "balanced";
+        autoDrive = AUTOOFF;
+        autoOperate = AUTOOFF;
+        balancing = BALANCED;
         
         //low pass filter stuff
         smoothed = 0;
         balanceVal = 0;
         smoothing = 10;
         lastUpdate = 0;
+        precision = 1;
+        rate = new Hashtable();
         
         // must get instance of these because you are not creating it
         // it already exists and we need to access it in our program
@@ -65,8 +80,6 @@ public class RobotTemplate extends RobotBase {
         
         // create a stopwatch timer
         stopwatch = new Timer();
-        
-        calibrationTime = 0;
         
         /******************************** USB  ********************************/
         // Define joysticks on the Driver Station
@@ -115,7 +128,6 @@ public class RobotTemplate extends RobotBase {
         
         //encoder
         batteryEncoder = new Encoder(9,10);
-        finEncoder = new Encoder(11,12);
         
         /***************************** ANALOG I/O *****************************/
         //PORTS CAN BE FROM 1-8
@@ -189,22 +201,22 @@ public class RobotTemplate extends RobotBase {
     //set our drive motor bounds by percent uniformly and drive the robot
     private void drive(int percent) {
         //tell the driver the current drive percentage
-        dsPrint(3, percent+"% speed");
+        dsPrint(4, percent+"% speed");
         //take joystick inputs and drive the robot
         robotDrive.tankDrive((leftStick.getY()*(percent/100)), (rightStick.getY()*(percent/100)));
         
         //autolift
-//        if(autoDrive != null){
-//            if(0 != leftStick.getY() && 0 != rightStick.getY()) {
-//                //joysticks in same direction
-//                if((leftStick.getY() > 0 && rightStick.getY() > 0) || (leftStick.getY() < 0 && rightStick.getY() < 0)) {
-//                    autoDrive = "dwn";
-//                } else {
-//                    autoDrive = "up";
-//                }
-//            }
-//            setLiftMotors(autoDrive);
-//        }
+        if(autoDrive != AUTOOFF){
+            if(0 != leftStick.getY() && 0 != rightStick.getY()) {
+                //joysticks in same direction
+                if((leftStick.getY() > 0 && rightStick.getY() > 0) || (leftStick.getY() < 0 && rightStick.getY() < 0)) {
+                    autoDrive = BACK;
+                } else {
+                    autoDrive = FWD;
+                }
+            }
+            setLiftMotors(autoDrive);
+        }
     }
     
     //set the batery speed controller with the given value if we can move it in that direction
@@ -225,26 +237,26 @@ public class RobotTemplate extends RobotBase {
     //set our drive motor bounds by percent uniformly and drive the robot
     private boolean driveBattery(int percent) {
         //tell the driver the current drive percentage
-        dsPrint(4, percent+"% speed");
+        dsPrint(5, percent+"% speed");
         //take joystick inputs and drive the robot
-        return setBattery(operatorStick.getY()/(percent/100));
+        return setBattery(operatorStick.getY()*(percent/100));
     }
     
     //setting our lift motors in different directions keeping in mind the limits
     //(like a spike would, btw the lift speed controllers
     //can be swapped with spikes if needed)
-    private void setLiftMotors(String direction) {
-        if(direction!=null && direction.equals("up") && (!liftLimitFrontUp.get() || !liftLimitBackUp.get())){
+    private void setLiftMotors(int direction) {
+        if(direction==UP && !(liftLimitFrontUp.get() || liftLimitBackUp.get())){
             liftMotorFront.set(1);
             liftMotorBack.set(1);
-        } else if (direction!=null && direction.equals("dwn") && (!liftLimitFrontDown.get() || !liftLimitBackDown.get())){
+        } else if (direction==DWN && !(liftLimitFrontDown.get() || liftLimitBackDown.get())){
             liftMotorFront.set(-1);
             liftMotorBack.set(-1);
         } else {
             liftMotorFront.set(0);
             liftMotorBack.set(0);
-            if(autoDrive!=null) {
-                autoDrive = "stp";
+            if(autoDrive!=AUTOOFF) {
+                autoDrive = STOP;
             }
         }
     }
@@ -252,33 +264,38 @@ public class RobotTemplate extends RobotBase {
     //setting our fin motor in different directions keeping in mind the limits
     //(like a spike would, btw the fin speed controller 
     //can be swapped with a spike if needed)
-    private void setFinMotor(String direction) {
-        if(direction != null && direction.equals("fwd") && (finLimitFwd.get())){
+    private void setFinMotor(int direction) {
+        if(direction==FWD && (finLimitFwd.get())){
             finMotor.set(-1);
-        } else if (direction != null && direction.equals("bck") && (finLimitBck.get())){
+        } else if (direction==BACK && (finLimitBck.get())){
             finMotor.set(1);
         } else {
             finMotor.set(0);
-            if(autoOperate != null) {
-                autoOperate = "stp";
+            if(autoOperate != AUTOOFF) {
+                autoOperate = STOP;
             }
         }
+    }
+    
+    //based on our gyroOffset get our adjusted angle;
+    private double getAdjustedGyroAngle() {
+        return gyro.getAngle()-(gryoOffset*Timer.getFPGATimestamp());
     }
     
     //rough auto balance code... its 1am i should review this lol
     private void autoBalance() {
         //initialize values for balancing before we hit the ramp
-        if(balancing!=null && balancing.equals("start")) {
-           
-            smoothed = gyro.getAngle();
-            balancing = "position";
-        } else if(balancing!=null && balancing.equals("balancing")) {
+        if(balancing==STARTUP) {
+            //smoothed = gyro.getAngle();
+            smoothed = getAdjustedGyroAngle();
+            balancing = READY;
+        } else if(balancing==GO) {
             // if our gyro is at our balance value we are good
-            //(probably should make this more robust with a zone that we are good with (like +/- 1 degree))
             lastUpdate = stopwatch.get();
-            double currentAngle = lowPassFilter(gyro.getAngle());
-            if(currentAngle>balanceVal-1) {
-                balancing = "balanced";
+//            double currentAngle = lowPassFilter(gyro.getAngle());
+            double currentAngle = lowPassFilter(getAdjustedGyroAngle());
+            if(currentAngle>balanceVal-precision && currentAngle<balanceVal+precision) {
+                balancing = BALANCED;
             } else {
                 //if we are above our balanced value
                 if(smoothed>balanceVal) {
@@ -313,11 +330,52 @@ public class RobotTemplate extends RobotBase {
         }
     }
     
+    private void calebrateGyro() {
+        if(calibrating) {
+            double time = stopwatch.get();
+            if(time < 1){
+                //for 1 sec capture gyro values
+                rate.put(new Double(time), new Double(gyro.getAngle()));
+                loop++;
+            } else if(rate.size()>0) {
+                //get the average rate of change of the gyro
+                double times[] = new double[rate.size()];
+                double values[] = new double[rate.size()];
+                loop = 0;
+                for (Enumeration e = rate.keys() ; e.hasMoreElements() ;) {
+                    times[loop] = ((Double)e.nextElement()).doubleValue();
+                    values[loop] = ((Double)rate.get(e.nextElement())).doubleValue();
+                    ++loop;
+                }
+                gryoOffset = 0;
+                if(loop>1){
+                    //add the slopes of all the values v times and get the average per second
+                    for(int i = 1;i<loop;++i){
+                        double rise = values[i]-values[i-1];
+                        double run = times[i]-times[i-1];
+                        gryoOffset += rise/run;
+                    }
+                    gryoOffset /= loop-1;
+                } else {
+                    //fallback we only have one gyro value so that is what we have to deal with
+                    gryoOffset = values[0];
+                }
+                calibrating = false;
+            } else {
+                //extreme fallback if for some reason we never even captured a single value
+                gryoOffset = gyro.getAngle();
+                calibrating = false;
+            }
+        }
+    }
+    
     //initalize functions on the robot like turning on an air compressor
     // Actions which would be performed once (and only once) upon initialization of the
     // robot would be put here.
     protected void robotInit() {
         stopwatch.start();
+        calibrating = true;
+        loop = 0;
         // let the drivers know that we have initialized the robot
         dsPrint("Robot Initialized");
     }
@@ -325,37 +383,54 @@ public class RobotTemplate extends RobotBase {
     //common code to be run in all modes every cycle
     protected void common(){
         //set auto modes in any mode
-//        if(leftStick.getRawButton(3)) {
-//            if(autoDrive==null) {
-//                autoDrive = "stp";
-//            } else {
-//                autoDrive = null;
-//            }
-//        }
-//        
-//        if (operatorStick.getRawButton(7)){
-//            if(autoOperate == null){ 
-//                autoOperate = "stp";
-//            } else {
-//                autoOperate = null;
-//            }
-//        }
+        if(leftStick.getRawButton(3)) {
+            if(autoDrive==AUTOOFF) {
+                autoDrive = 0;
+            } else {
+                autoDrive = AUTOOFF;
+            }
+        }
+        
+        if (operatorStick.getRawButton(7)){
+            if(autoOperate == AUTOOFF){ 
+                autoOperate = 0;
+            } else {
+                autoOperate = AUTOOFF;
+            }
+        }
         
         //print auto mode
-//        dsPrint(1,"Drv: "+(autoDrive==null?"off":autoDrive)+" Opr: "+(autoOperate==null?"off":autoOperate));
-//        dsPrint(2,"AutoBalSig: "+balancing);
-//        
-//        //test sensor data
-//        {
+        String drv = "off";
+        if(autoDrive==UP) {
+            drv = "up";
+        } else if (autoDrive==DWN) {
+            drv = "down";
+        } else if (autoDrive==STOP) {
+            drv = "stop";
+        }
+        
+        String oper = "off";
+        if(autoOperate==STOP) {
+            oper = "stop";
+        } else if (autoOperate==FWD) {
+            oper = "fwd";
+        } else if (autoOperate==BACK) {
+            oper = "back";
+        }
+        dsPrint(2,"Drv: "+drv+" Opr: "+oper);
+        dsPrint(3,"AutoBalSig: "+balancing);
+        
+        //test sensor data
+        {
 //            ADXL345_I2C.AllAxes axises = accel.getAccelerations();
-//            dsPrint(5,axises.XAxis+" "+axises.YAxis+" "+axises.ZAxis);
-//            
-//            boolean limit1 = liftLimitFrontUp.get();
-//            boolean limit2 = liftLimitFrontDown.get();
-//            boolean limit3 = liftLimitBackUp.get();
-//            boolean limit4 = liftLimitBackDown.get();
-//            dsPrint(6,"1: "+(limit1?"1":"0")+" 2: "+(limit2?"1":"0")+" 3: "+(limit3?"1":"0")+" 4: "+(limit4?"1":"0"));
-//        }
+//            dsPrint(6,axises.XAxis+" "+axises.YAxis+" "+axises.ZAxis);
+            
+            boolean limit1 = liftLimitFrontUp.get();
+            boolean limit2 = liftLimitFrontDown.get();
+            boolean limit3 = liftLimitBackUp.get();
+            boolean limit4 = liftLimitBackDown.get();
+            dsPrint(6,"1: "+(limit1?"1":"0")+" 2: "+(limit2?"1":"0")+" 3: "+(limit3?"1":"0")+" 4: "+(limit4?"1":"0"));
+        }
         
         // actually print all of the dsPrint strings, send to driver computer
         dsLCD.updateLCD(); 
@@ -365,22 +440,19 @@ public class RobotTemplate extends RobotBase {
     protected void disabled() {
         // kill movement
         robotDrive.drive(0,0);
-//        setLiftMotors("off");
-//        setFinMotor("off");
-//        batteryMotor.set(0);
-//        double time = stopwatch.get(); 
-//       if(time >= calibrationTime+1){
-//            calibrationTime = time;
-//            double rate = gyro.getAngle();
-//        }
+        setLiftMotors(0);
+        setFinMotor(0);
+        batteryMotor.set(0);
+        //commenting out for now, very possibly could break things
+//        calebrateGyro();
     }
 
     //run autonomous code for begining of match
     protected void autonomous() {
-//        while(this.stopwatch.get() < 5) {
-//            robotDrive.drive(1,0); //forward
-//            setFinMotor("fwd"); //push the fin all the way forward
-//        }
+        if(this.stopwatch.get() < 5) {
+            robotDrive.drive(1,0); //forward
+            setFinMotor(1); //push the fin all the way forward
+        }
     }
 
     //run code for drivers
@@ -394,33 +466,33 @@ public class RobotTemplate extends RobotBase {
         }
 
         // lift code if we are not automatically doing this lift while driving
-        if(autoDrive == null) {
+        if(autoDrive == AUTOOFF) {
             if (rightStick.getRawButton(3)) {
-                setLiftMotors("up");
+                setLiftMotors(1);
             } else if (rightStick.getRawButton(2)) {
-                setLiftMotors("dwn");
+                setLiftMotors(-1);
             } else {
-                setLiftMotors("stp");
+                setLiftMotors(0);
             }
         }
 
         //fin code
-        if (operatorStick.getRawButton(3) || (autoOperate!=null && autoOperate.equals("fwd"))){
-            if (autoOperate!=null && autoOperate.equals("fwd")) {
-                autoOperate = "stp";
-            } else if(autoOperate != null) {
-                autoOperate = "fwd";
+        if (operatorStick.getRawButton(3) || autoOperate==UP){
+            if (autoOperate==UP) {
+                autoOperate = STOP;
+            } else if(autoOperate == STOP) {
+                autoOperate = UP;
             }
-            setFinMotor("fwd");
-        } else if (operatorStick.getRawButton(2) || (autoOperate!=null && autoOperate.equals("bck"))){
-            if (autoOperate!=null && autoOperate.equals("bck")) {
-                autoOperate = "stp";
-            } else if(autoOperate != null) {
-                autoOperate = "bck";
+            setFinMotor(1);
+        } else if (operatorStick.getRawButton(2) || autoOperate==DWN){
+            if (autoOperate==DWN) {
+                autoOperate = STOP;
+            } else if(autoOperate == STOP) {
+                autoOperate = DWN;
             }
-            setFinMotor("bck");
+            setFinMotor(-1);
         } else {
-            setFinMotor("stp");
+            setFinMotor(0);
         }
         
         //battery code
@@ -430,16 +502,18 @@ public class RobotTemplate extends RobotBase {
             driveBattery(100);
         }
         
+//NO CONFIDENCE IN THIS CODE RIGHT NOW SO COMMENTING OUT
         //auto balance code operator and driver must agree to go?!
         //Bunca should we do this? or just have the operator/driver control it
 //        if(operatorStick.getRawButton(10) && rightStick.getRawButton(10)){
-//            if(balancing==null) {
-//                balancing = "start";
-//            } else if(balancing.equals("position")) {
-//                balancing = "balancing";
+//            if(balancing==0) {
+//                balancing = 1;
+//            } else if(balancing==2) {
+//                balancing = 3;
 //            }
-//            autoBalance();
 //        }
+//        
+//        autoBalance();
     }
 
     //main function from our perspective, this is what the robot calls when starting
@@ -456,12 +530,11 @@ public class RobotTemplate extends RobotBase {
             } else if (isAutonomous()) {
                 changeMode(1);
                 dsPrint("Auto " + stopwatch.get() + " sec");
-//                autonomous(); // run the autonomous code
+                autonomous(); // run the autonomous code
             } else { //if (isTeleoperated()) {
                 changeMode(2);
                 dsPrint("Teleop " + stopwatch.get() + " sec");
                 teleoperated(); // run teleoperated code
-//                robotDrive.tankDrive(leftStick, rightStick);
             }
         } // end while loop SHOULD NEVER HAPPEN OR THE ROBOT IS DEAD
     }
