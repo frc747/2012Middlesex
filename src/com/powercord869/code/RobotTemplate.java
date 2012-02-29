@@ -1,7 +1,9 @@
 //Drive motors are Victors, wheel lift motors are Jaguars.(Addison 2/12/12)
-package edu.wpi.first.wpilibj.templates;
+package com.powercord869.code;
 
 import edu.wpi.first.wpilibj.*;
+import java.io.EOFException;
+import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
@@ -50,6 +52,9 @@ public class RobotTemplate extends RobotBase {
     boolean calibrating;
     Hashtable rate;
     double gryoOffset;
+    boolean recording;
+    DataLogger datalogger;
+    DataLoader dataloader;
 
     // constructor for robot variables
     public RobotTemplate() {
@@ -369,6 +374,36 @@ public class RobotTemplate extends RobotBase {
         }
     }
     
+    //record different things about the robot
+    private void record() {
+        if(recording && datalogger != null) {
+            try {
+                datalogger.wDouble(leftStick.getY());
+                datalogger.wDouble(rightStick.getY());
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+    
+    //playback the robot log
+    private void playback() {
+        try {
+            if(dataloader == null) {
+                dataloader = new DataLoader("auto1.log");
+            }
+            robotDrive.tankDrive(dataloader.rDouble(),dataloader.rDouble());
+        } catch (EOFException ex) {
+            dsPrint("end of recording");
+        } catch (IOException ex) {
+            dsPrint("playback error");
+            //only stacktrace if we are not on the field
+            if(!ds.isFMSAttached()) {
+                ex.printStackTrace();
+            }
+        }
+    }
+    
     //initalize functions on the robot like turning on an air compressor
     // Actions which would be performed once (and only once) upon initialization of the
     // robot would be put here.
@@ -382,6 +417,27 @@ public class RobotTemplate extends RobotBase {
     
     //common code to be run in all modes every cycle
     protected void common(){
+        //makes sure we are not on the field
+//        if(!ds.isFMSAttached()) {
+//            //if we press the button once start recording, press it again close the recording
+//            if(operatorStick.getRawButton(11)) {
+//                try {
+//                    if(!recording) {
+//                        datalogger = new DataLogger("auto1.log");
+//                    } else {
+//                        datalogger.close();
+//                    }
+//                } catch (IOException ex) {
+//                    ex.printStackTrace();
+//                }
+//            }
+//        } else {
+//            recording = false;
+//        }
+        
+        //only will record if we were pulling the operator trigger on boot
+//        record();
+        
         //set auto modes in any mode
         if(leftStick.getRawButton(3)) {
             if(autoDrive==AUTOOFF) {
@@ -453,6 +509,8 @@ public class RobotTemplate extends RobotBase {
             robotDrive.drive(1,0); //forward
             setFinMotor(1); //push the fin all the way forward
         }
+        //playback recorded autonomous
+        //playback();
     }
 
     //run code for drivers
