@@ -435,9 +435,6 @@ public class RobotTemplate extends RobotBase {
 //            recording = false;
 //        }
         
-        //only will record if we were pulling the operator trigger on boot
-//        record();
-        
         //set auto modes in any mode
         if(leftStick.getRawButton(3)) {
             if(autoDrive==AUTOOFF) {
@@ -515,6 +512,8 @@ public class RobotTemplate extends RobotBase {
 
     //run code for drivers
     protected void teleoperated() {
+        //only will record if we were pulling the operator trigger on boot
+//        record();
         
         // drive code
         if (rightStick.getRawButton(1) == true && leftStick.getRawButton(1) == true) {
