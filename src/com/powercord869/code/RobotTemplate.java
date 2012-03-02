@@ -228,10 +228,12 @@ public class RobotTemplate extends RobotBase {
     private boolean setBattery(double value) {
         if(value>0) {
             if(!batteryLimitFwd.get()) {
+                batteryMotor.set(0);
                 return false;
             }
-        } else {
+        } else if(value<0) {
             if(!batteryLimitBck.get()) {
+                batteryMotor.set(0);
                 return false;
             }
         }
@@ -251,18 +253,52 @@ public class RobotTemplate extends RobotBase {
     //(like a spike would, btw the lift speed controllers
     //can be swapped with spikes if needed)
     private void setLiftMotors(int direction) {
-        if(direction==UP && !(liftLimitFrontUp.get() || liftLimitBackUp.get())){
+        if(direction==UP && liftLimitFrontUp.get()){
             liftMotorFront.set(1);
-            liftMotorBack.set(1);
-        } else if (direction==DWN && !(liftLimitFrontDown.get() || liftLimitBackDown.get())){
+        } else if (direction==DWN && liftLimitFrontDown.get()){
             liftMotorFront.set(-1);
-            liftMotorBack.set(-1);
         } else {
             liftMotorFront.set(0);
+        }
+        
+        if(direction==UP && liftLimitBackUp.get()) {
+            liftMotorBack.set(1);
+        } else if (direction==DWN && liftLimitBackDown.get()) {
+            liftMotorBack.set(-1);
+        } else {
             liftMotorBack.set(0);
-            if(autoDrive!=AUTOOFF) {
-                autoDrive = STOP;
-            }
+        }
+        
+        if(autoDrive!=AUTOOFF && ((!liftLimitFrontUp.get() && !liftLimitBackUp.get())||(!liftLimitFrontDown.get() && !liftLimitBackDown.get()))) {
+            autoDrive = STOP;
+        }
+    }
+    
+    private void downLift() {
+        if(liftLimitFrontDown.get()) {
+            liftMotorFront.set(-.3);
+        } else {
+            liftMotorFront.set(0);
+        }
+        
+        if(liftLimitFrontDown.get()) {
+            liftMotorBack.set(-.3);
+        } else {
+            liftMotorBack.set(0);
+        }
+    }
+    
+    private void upLift() {
+        if(liftLimitFrontUp.get()) {
+            liftMotorFront.set(.3);
+        } else {
+            liftMotorFront.set(0);
+        }
+        
+        if(liftLimitFrontUp.get()) {
+            liftMotorBack.set(.3);
+        } else {
+            liftMotorBack.set(0);
         }
     }
     
@@ -526,28 +562,32 @@ public class RobotTemplate extends RobotBase {
 
         // lift code if we are not automatically doing this lift while driving
 //        if(autoDrive == AUTOOFF) {
-//            if (rightStick.getRawButton(3)) {
+//            if (rightStick.getRawButton(2)) {
 //                setLiftMotors(1);
-//            } else if (rightStick.getRawButton(2)) {
-//                setLiftMotors(-1);
 //            } else {
-//                setLiftMotors(0);
+//                setLiftMotors(-1);
 //            }
 //        }
-        if (leftStick.getRawButton(3) && !liftLimitFrontUp.get()){
-            liftMotorFront.set(.1);
-        } else if(leftStick.getRawButton(2) && !liftLimitFrontDown.get()){
-            liftMotorFront.set(-.1);
-        } else {
-            liftMotorFront.set(0);
-        }
+//        if (leftStick.getRawButton(3) && !liftLimitFrontUp.get()){
+//            liftMotorFront.set(.1);
+//        } else if(leftStick.getRawButton(2) && !liftLimitFrontDown.get()){
+//            liftMotorFront.set(-.1);
+//        } else {
+//            liftMotorFront.set(0);
+//        }
+//        
+//        if (rightStick.getRawButton(3) && liftLimitBackUp.get()){
+//            liftMotorBack.set(.1);
+//        } else if(rightStick.getRawButton(2) && liftLimitBackDown.get()){
+//            liftMotorBack.set(-.1);
+//        } else {
+//            liftMotorBack.set(0);
+//        }
         
-        if (rightStick.getRawButton(3) && liftLimitBackUp.get()){
-            liftMotorBack.set(.1);
-        } else if(rightStick.getRawButton(2) && liftLimitBackDown.get()){
-            liftMotorBack.set(-.1);
+        if(rightStick.getRawButton(2)) {
+            downLift();
         } else {
-            liftMotorBack.set(0);
+            upLift();
         }
 
         //fin code
