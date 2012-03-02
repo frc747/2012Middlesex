@@ -28,10 +28,15 @@ public class RobotTemplate extends RobotBase {
     int READY = 2;
     int GO = 3;
     
+    int BATTERY = 50;
+    double FINFWD = .5;
+    double FINBACK = -.4;
+    double LIFT = .25;
+    
     // Declare variables SO MANY VARIABLES!!!
     int mode;
     int autoDrive, autoOperate, balancing;
-    RobotDrive robotDrive;
+//    RobotDrive robotDrive;
     DriverStation ds;
     Timer stopwatch;
     DriverStationLCD dsLCD;
@@ -102,7 +107,7 @@ public class RobotTemplate extends RobotBase {
         rearRightMotor = new Victor(1,2);
         
         //setup robot drive class with our drive speed controllers
-        robotDrive = new RobotDrive(frontLeftMotor, rearLeftMotor, frontRightMotor, rearRightMotor);
+//        robotDrive = new RobotDrive(frontLeftMotor, rearLeftMotor, frontRightMotor, rearRightMotor);
         
         //setup fin speed controller
         finMotor = new Victor(1,6);
@@ -118,10 +123,10 @@ public class RobotTemplate extends RobotBase {
         //PORTS CAN BE FROM 1-14
         
         //lift limits
-        liftLimitFrontUp = new DigitalInput(1,1);
-        liftLimitFrontDown = new DigitalInput(1,2);
-        liftLimitBackUp = new DigitalInput(1,3);
-        liftLimitBackDown = new DigitalInput(1,4);
+        liftLimitFrontUp = new DigitalInput(1,3);
+        liftLimitFrontDown = new DigitalInput(1,4);
+        liftLimitBackUp = new DigitalInput(1,1);
+        liftLimitBackDown = new DigitalInput(1,2);
         
         //fin limits
         finLimitFwd = new DigitalInput(1,6);
@@ -208,7 +213,12 @@ public class RobotTemplate extends RobotBase {
         //tell the driver the current drive percentage
         dsPrint(4, percent+"% speed");
         //take joystick inputs and drive the robot
-        robotDrive.tankDrive((rightStick.getY()*(percent/100)), (leftStick.getY()*(percent/100)));
+        double right = ((-leftStick.getY())*percent/100);
+        double left = (rightStick.getY()*percent/100);
+        frontLeftMotor.set(left);
+        rearLeftMotor.set(left);
+        frontRightMotor.set(right);
+        rearRightMotor.set(right);
         
         //autolift
 //        if(autoDrive != AUTOOFF){
@@ -227,7 +237,7 @@ public class RobotTemplate extends RobotBase {
     //set the batery speed controller with the given value if we can move it in that direction
     private boolean setBattery(double value) {
         if(value>0) {
-            if(!batteryLimitFwd.get()) {
+            if(batteryLimitFwd.get()) {
                 batteryMotor.set(0);
                 return false;
             }
@@ -246,57 +256,36 @@ public class RobotTemplate extends RobotBase {
         //tell the driver the current drive percentage
         dsPrint(5, percent+"% speed");
         //take joystick inputs and drive the robot
-        return setBattery(operatorStick.getY()*(percent/100));
-    }
-    
-    //setting our lift motors in different directions keeping in mind the limits
-    //(like a spike would, btw the lift speed controllers
-    //can be swapped with spikes if needed)
-    private void setLiftMotors(int direction) {
-        if(direction==UP && liftLimitFrontUp.get()){
-            liftMotorFront.set(1);
-        } else if (direction==DWN && liftLimitFrontDown.get()){
-            liftMotorFront.set(-1);
-        } else {
-            liftMotorFront.set(0);
-        }
-        
-        if(direction==UP && liftLimitBackUp.get()) {
-            liftMotorBack.set(1);
-        } else if (direction==DWN && liftLimitBackDown.get()) {
-            liftMotorBack.set(-1);
-        } else {
-            liftMotorBack.set(0);
-        }
-        
-        if(autoDrive!=AUTOOFF && ((!liftLimitFrontUp.get() && !liftLimitBackUp.get())||(!liftLimitFrontDown.get() && !liftLimitBackDown.get()))) {
-            autoDrive = STOP;
-        }
+        return setBattery(operatorStick.getY()*percent/100);
     }
     
     private void downLift() {
+        System.out.println("downLift " + -LIFT);
         if(liftLimitFrontDown.get()) {
-            liftMotorFront.set(-.3);
+            liftMotorFront.set(-LIFT);
         } else {
             liftMotorFront.set(0);
         }
         
-        if(liftLimitFrontDown.get()) {
-            liftMotorBack.set(-.3);
+        if(liftLimitBackDown.get()) {
+            liftMotorBack.set(-LIFT);
         } else {
             liftMotorBack.set(0);
         }
     }
     
     private void upLift() {
+        
         if(liftLimitFrontUp.get()) {
-            liftMotorFront.set(.3);
+            System.out.println("front up" + LIFT);
+            liftMotorFront.set(LIFT);
         } else {
             liftMotorFront.set(0);
         }
         
-        if(liftLimitFrontUp.get()) {
-            liftMotorBack.set(.3);
+        if(liftLimitBackUp.get()) {
+            System.out.println("back up" + LIFT);
+            liftMotorBack.set(LIFT);
         } else {
             liftMotorBack.set(0);
         }
@@ -307,9 +296,9 @@ public class RobotTemplate extends RobotBase {
     //can be swapped with a spike if needed)
     private void setFinMotor(int direction) {
         if(direction==FWD && (finLimitFwd.get())){
-            finMotor.set(.5);
+            finMotor.set(FINFWD);
         } else if (direction==BACK && (finLimitBck.get())){
-            finMotor.set(-.5);
+            finMotor.set(FINBACK);
         } else {
             finMotor.set(0);
             if(autoOperate != AUTOOFF) {
@@ -346,7 +335,7 @@ public class RobotTemplate extends RobotBase {
                         double start = stopwatch.get();
                         while(stopwatch.get() < start+1) {
                             setBattery(-.25);
-                            robotDrive.drive(.25,0);
+//                            robotDrive.drive(.25,0);
                         }
                         //continue moving the battery center?
                         while(stopwatch.get() < start+5) {
@@ -359,7 +348,7 @@ public class RobotTemplate extends RobotBase {
                         double start = stopwatch.get();
                         while(stopwatch.get() < start+1) {
                             setBattery(.25);
-                            robotDrive.drive(-.25,0);
+//                            robotDrive.drive(-.25,0);
                         }
                         //continue moving the battery center?
                         while(stopwatch.get() < start+5) {
@@ -428,7 +417,7 @@ public class RobotTemplate extends RobotBase {
             if(dataloader == null) {
                 dataloader = new DataLoader("auto1.log");
             }
-            robotDrive.tankDrive(dataloader.rDouble(),dataloader.rDouble());
+//            robotDrive.tankDrive(dataloader.rDouble(),dataloader.rDouble());
         } catch (EOFException ex) {
             dsPrint("end of recording");
         } catch (IOException ex) {
@@ -519,8 +508,8 @@ public class RobotTemplate extends RobotBase {
 //            boolean limit3 = liftLimitBackUp.get();
 //            boolean limit4 = liftLimitBackDown.get();
 //            dsPrint(6,"1: "+(limit1?"1":"0")+" 2: "+(limit2?"1":"0")+" 3: "+(limit3?"1":"0")+" 4: "+(limit4?"1":"0"));
-        dsPrint(2,(liftLimitFrontUp.get()?"fu1":"fu0")+(liftLimitFrontDown.get()?"fd1":"fd0")+(liftLimitBackUp.get()?"bu1":"bu0")+(liftLimitBackDown.get()?"bd1":"bd0"));
-        dsPrint(3,(finLimitFwd.get()?"ff1":"ff0")+(finLimitBck.get()?"fb1":"fb0")+(batteryLimitFwd.get()?"bf1":"bf0")+(batteryLimitBck.get()?"bb1":"bb0"));
+            dsPrint(2,(liftLimitFrontUp.get()?"fu1":"fu0")+(liftLimitFrontDown.get()?"fd1":"fd0")+(liftLimitBackUp.get()?"bu1":"bu0")+(liftLimitBackDown.get()?"bd1":"bd0"));
+            dsPrint(3,(finLimitFwd.get()?"ff1":"ff0")+(finLimitBck.get()?"fb1":"fb0")+(batteryLimitFwd.get()?"bf1":"bf0")+(batteryLimitBck.get()?"bb1":"bb0"));
         }
         
         // actually print all of the dsPrint strings, send to driver computer
@@ -530,9 +519,18 @@ public class RobotTemplate extends RobotBase {
     //do this while we are disabled
     protected void disabled() {
         // kill movement
-        robotDrive.drive(0,0);
-        setLiftMotors(0);
-        setFinMotor(0);
+        frontLeftMotor.set(0);
+        rearLeftMotor.set(0);
+        frontRightMotor.set(0);
+        rearRightMotor.set(0);
+        //kill lift
+        liftMotorFront.set(0);
+        liftMotorBack.set(0);
+        liftMotorFront.set(0);
+        liftMotorBack.set(0);
+        //kill fin
+        finMotor.set(0);
+        //kill battery
         batteryMotor.set(0);
         //commenting out for now, very possibly could break things
 //        calebrateGyro();
@@ -540,10 +538,32 @@ public class RobotTemplate extends RobotBase {
 
     //run autonomous code for begining of match
     protected void autonomous() {
-        if(this.stopwatch.get() < 5) {
-            robotDrive.drive(1,0); //forward
-            setFinMotor(1); //push the fin all the way forward
-        }
+//        if(this.stopwatch.get() < 5) {
+//            frontLeftMotor.set(-1);
+//            rearLeftMotor.set(-1);
+//            frontRightMotor.set(1);
+//            rearRightMotor.set(1);
+//            //drive(100); //forward
+//            setFinMotor(FWD); //push the fin all the way forward
+//        } else {
+            frontLeftMotor.set(0);
+            rearLeftMotor.set(0);
+            frontRightMotor.set(0);
+            rearRightMotor.set(0);
+            //drive(100); //forward
+            setFinMotor(STOP); //push the fin all the way forward
+//        }
+        
+        //kill lift
+        liftMotorFront.set(0);
+        liftMotorBack.set(0);
+        liftMotorFront.set(0);
+        liftMotorBack.set(0);
+        
+        
+        //kill battery
+        batteryMotor.set(0);
+        
         //playback recorded autonomous
         //playback();
     }
@@ -597,21 +617,21 @@ public class RobotTemplate extends RobotBase {
             } else if(autoOperate == STOP) {
                 autoOperate = UP;
             }
-            setFinMotor(1);
+            setFinMotor(FWD);
         } else if (operatorStick.getRawButton(2) || autoOperate==DWN){
             if (autoOperate==DWN) {
                 autoOperate = STOP;
             } else if(autoOperate == STOP) {
                 autoOperate = DWN;
             }
-            setFinMotor(-1);
+            setFinMotor(BACK);
         } else {
-            setFinMotor(0);
+            setFinMotor(STOP);
         }
         
         //battery code
         if(operatorStick.getRawButton(1)) {
-            driveBattery(25);
+            driveBattery(50);
         } else {
             driveBattery(100);
         }
