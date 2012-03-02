@@ -31,7 +31,7 @@ public class RobotTemplate extends RobotBase {
     int BATTERY = 50;
     double FINFWD = .5;
     double FINBACK = -.4;
-    double LIFT = .25;
+    double LIFT = 1;
     
     // Declare variables SO MANY VARIABLES!!!
     int mode;
@@ -538,7 +538,7 @@ public class RobotTemplate extends RobotBase {
 
     //run autonomous code for begining of match
     protected void autonomous() {
-//        if(this.stopwatch.get() < 5) {
+//        if(this.stopwatch.get() < 2) {
 //            frontLeftMotor.set(-1);
 //            rearLeftMotor.set(-1);
 //            frontRightMotor.set(1);
