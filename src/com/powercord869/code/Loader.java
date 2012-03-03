@@ -11,13 +11,13 @@ import javax.microedition.io.Connector;
  *
  * @author mechinn
  */
-public class DataLoader {
+public class Loader {
     private DataInputStream input;
     /**
      * Constructor
      * @param fileName the filename to write to
      */
-    public DataLoader(String fileName) throws IOException {
+    public Loader(String fileName) throws IOException {
         input = Connector.openDataInputStream(fileName);
     }
     

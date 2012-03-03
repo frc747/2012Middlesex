@@ -10,15 +10,15 @@ import javax.microedition.io.Connector;
  * Data Logger Class
  * @author Jeremy Germita
  */
-public class DataLogger {
-    private DataLogger instance;
+public class Recorder {
+    private Recorder instance;
     private DataOutputStream output;
 
     /**
      * Constructor
      * @param fileName the filename to write to
      */
-    public DataLogger(String fileName) throws IOException {
+    public Recorder(String fileName) throws IOException {
         output = Connector.openDataOutputStream(fileName);
     }
 
@@ -27,9 +27,9 @@ public class DataLogger {
      * @param fileName the filename to write to
      * @return the instance of the DataLogger
      */
-    public DataLogger getInstance(String fileName) throws IOException {
+    public Recorder getInstance(String fileName) throws IOException {
         if(instance == null) {
-            instance = new DataLogger(fileName);
+            instance = new Recorder(fileName);
         }
         return instance;
     }
