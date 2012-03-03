@@ -501,17 +501,20 @@ public class RobotTemplate extends RobotBase {
         // drive code
         if (rightStick.getRawButton(1) == true && leftStick.getRawButton(1) == true) {
             drive(75);
+            downLift();
         } else if (rightStick.getRawButton(1) == true || leftStick.getRawButton(1) == true) {
             drive(50);
-        } else {
-            drive(100);
-        }
-        
-        if(rightStick.getRawButton(2)) {
             downLift();
         } else {
-            upLift();
+            drive(100);
+            if(rightStick.getRawButton(2)) {
+                downLift();
+            } else {
+                upLift();
+            }
         }
+        
+        
 
         //fin code
         if (operatorStick.getRawButton(3)){
