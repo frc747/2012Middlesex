@@ -15,12 +15,12 @@ public class WeightShifter {
     private Victor batteryMotor;
     private DigitalInput batteryLimitFwd, batteryLimitBck;
     
-    public WeightShifter() {
+    public WeightShifter(int pwm, int limF, int limB) {
         //setup battery speed controller
-        batteryMotor = new Victor(1,3);
+        batteryMotor = new Victor(1,pwm);
         //battery limits
-        batteryLimitFwd = new DigitalInput(1,8);
-        batteryLimitBck = new DigitalInput(1,7);
+        batteryLimitFwd = new DigitalInput(1,limF);
+        batteryLimitBck = new DigitalInput(1,limB);
     }
     
     //set the batery speed controller with the given value if we can move it in that direction

@@ -13,33 +13,32 @@ import edu.wpi.first.wpilibj.Victor;
  */
 public class Fin {
     private double forwardSpeed, backSpeed;
-    private Victor finMotor;
-    private DigitalInput finLimitForward;
-    private DigitalInput finLimitBack;
+    private Victor motor;
+    private DigitalInput limitForward, limitBack;
     
-    public Fin(double fwdSpeed, double bckSpeed) {
+    public Fin(double fwdSpeed, double bckSpeed, int pwm, int limF, int limB) {
         forwardSpeed = fwdSpeed;
         backSpeed = bckSpeed;
         //setup fin speed controller
-        finMotor = new Victor(1,6);
+        motor = new Victor(1,pwm);
         //fin limits
-        finLimitForward = new DigitalInput(1,6);
-        finLimitBack = new DigitalInput(1,5);
+        limitForward = new DigitalInput(1,limF);
+        limitBack = new DigitalInput(1,limB);
     }
     
     public void forward() {
-        if(finLimitForward.get()) {
-            finMotor.set(forwardSpeed);
+        if(limitForward.get()) {
+            motor.set(forwardSpeed);
         }
     }
     
     public void backward() {
-        if(finLimitBack.get()) {
-            finMotor.set(backSpeed);
+        if(limitBack.get()) {
+            motor.set(backSpeed);
         }
     }
     
     public void stop() {
-        finMotor.set(0);
+        motor.set(0);
     }
 }

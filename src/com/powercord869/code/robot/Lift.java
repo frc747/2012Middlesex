@@ -17,17 +17,17 @@ public class Lift {
     private DigitalInput liftLimitFrontUp, liftLimitFrontDown, liftLimitBackUp, liftLimitBackDown;
     private Jaguar liftMotorFront, liftMotorBack;
     
-    public Lift(double speed) {
+    public Lift(double speed, int front, int back, int limFU, int limFD, int limBU, int limBD) {
         this.speed = speed;
         //lift limits
-        liftLimitFrontUp = new DigitalInput(1,3);
-        liftLimitFrontDown = new DigitalInput(1,4);
-        liftLimitBackUp = new DigitalInput(1,1);
-        liftLimitBackDown = new DigitalInput(1,2);
+        liftLimitFrontUp = new DigitalInput(1,limFU);
+        liftLimitFrontDown = new DigitalInput(1,limFD);
+        liftLimitBackUp = new DigitalInput(1,limBU);
+        liftLimitBackDown = new DigitalInput(1,limBD);
         
         //setup lift speed controllers
-        liftMotorFront = new Jaguar(1,7);
-        liftMotorBack = new Jaguar(1,8);
+        liftMotorFront = new Jaguar(1,front);
+        liftMotorBack = new Jaguar(1,back);
     }
     
     public void stop() {

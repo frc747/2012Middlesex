@@ -2,6 +2,7 @@
 package com.powercord869.code.robot;
 
 import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.camera.AxisCamera;
 import java.io.EOFException;
 import java.io.IOException;
 import java.util.Enumeration;
@@ -15,42 +16,58 @@ import java.util.Hashtable;
  * directory.
  */
 public class Team869 extends RobotBase {
-    //Constants
-    int AUTOOFF = 869; //needed a magic value other than -1, 0, and 1
-    int STOP = 0;
-    int FWD = 1;
-    int BACK = -1;
-    int UP = 1;
-    int DWN = -1;
+    //Constants    
+    private int BATTERY = 50;
+    private double FINFWD = .5;
+    private double FINBACK = -.4;
+    private double LIFT = 1;
     
-    int BALANCED = 0;
-    int STARTUP = 1;
-    int READY = 2;
-    int GO = 3;
-    
-    int BATTERY = 50;
-    double FINFWD = .5;
-    double FINBACK = -.4;
-    double LIFT = 1;
-    
+    //PWMs
+        //Drive
+            private int frontLeftMotor = 4;
+            private int rearLeftMotor = 5;
+            private int frontRightMotor = 1;
+            private int rearRightMotor = 2;
+        //Lift
+            private int liftMotorFront = 7;
+            private int liftMotorBack = 8;
+        //Fin
+            private int finMotor = 6;
+        //Weight
+            private int batteryMotor = 3;
+    //DI/Os
+        //Lift
+            private int liftLimitFrontUp = 3;
+            private int liftLimitFrontDown = 4;
+            private int liftLimitBackUp = 1;
+            private int liftLimitBackDown = 2;
+        //Fin
+            private int finLimitForward = 6;
+            private int finLimitBack = 5;
+        //Weight
+            private int batteryLimitFwd = 8;
+            private int batteryLimitBck = 7;
+            
     // Declare variables SO MANY VARIABLES!!!
-    int mode;
-    int balancing;
-    DriverStation ds;
-    Timer stopwatch;
-    Joystick rightStick, leftStick, operatorStick;
-    boolean recording;
-    Recorder recorder;
-    Loader loader;
-    Drive drive;
-    Lift lift;
-    Fin fin;
-    WeightShifter weight;
+    private int mode;
+    private DriverStation ds;
+    private AxisCamera camera;
+    private Timer stopwatch;
+    private Joystick rightStick, leftStick, operatorStick;
+    
+    private boolean recording;
+    private Recorder recorder;
+    private Loader loader;
+    
+    private Drive drive;
+    private Lift lift;
+    private Fin fin;
+    private WeightShifter weight;
     
     //unused right now
-    ADXL345_I2C accel;
-    Gyro gyro;
-    Encoder batteryEncoder;
+    private ADXL345_I2C accel;
+    private Gyro gyro;
+    private Encoder batteryEncoder;
 
     // constructor for robot variables
     public Team869() {
@@ -64,13 +81,18 @@ public class Team869 extends RobotBase {
         // get the cRIO instance
         ds = DriverStation.getInstance();
         
+        //camera setup in theory should just work because we are already doing LCD.update()
+        camera = AxisCamera.getInstance();
+        camera.writeResolution(AxisCamera.ResolutionT.k320x240);
+        camera.writeBrightness(0);
+        
         // create a stopwatch timer
         stopwatch = new Timer();
         
-        drive = new Drive();
-        lift = new Lift(LIFT);
-        fin = new Fin(FINFWD, FINBACK);
-        weight = new WeightShifter();
+        drive = new Drive(frontLeftMotor, rearLeftMotor, frontRightMotor, rearRightMotor);
+        lift = new Lift(LIFT, liftMotorFront, liftMotorBack, liftLimitFrontUp, liftLimitFrontDown, liftLimitBackUp, liftLimitBackDown);
+        fin = new Fin(FINFWD, FINBACK, finMotor, finLimitForward, finLimitBack);
+        weight = new WeightShifter(batteryMotor, batteryLimitFwd, batteryLimitBck);
         
         /******************************** USB  ********************************/
         // Define joysticks on the Driver Station
@@ -124,10 +146,12 @@ public class Team869 extends RobotBase {
     //playback the robot log
     private void playback() {
         try {
-            if(loader == null) {
-                loader = new Loader("file:///auto1.log");
+            if(!recording) {
+                if(loader == null) {
+                    loader = new Loader("file:///auto1.log");
+                }
+//                drive(loader.rDouble(),loader.rDouble());
             }
-//            drive(dataloader.rDouble(),dataloader.rDouble());
         } catch (EOFException ex) {
             LCD.print(6,"end of recording");
         } catch (IOException ex) {
@@ -256,11 +280,11 @@ public class Team869 extends RobotBase {
                 changeMode(0);
                 LCD.print("Disable " + stopwatch.get() + " sec"); //I ran out of lines to print to D:
                 disabled(); // run disabled code
-            } else if (isAutonomous()) {
+            } else if (isAutonomous() && isEnabled()) {
                 changeMode(1);
                 LCD.print("Auto " + stopwatch.get() + " sec");
                 autonomous(); // run the autonomous code
-            } else { //if (isTeleoperated()) {
+            } else if (isOperatorControl() && isEnabled()) {
                 changeMode(2);
                 LCD.print("Teleop " + stopwatch.get() + " sec");
                 teleoperated(); // run teleoperated code

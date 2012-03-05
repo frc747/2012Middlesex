@@ -1,17 +1,6 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.powercord869.code.robot;
 
-import edu.wpi.first.wpilibj.Timer;
-import java.util.Enumeration;
-import java.util.Hashtable;
-
-/**
- *
- * @author programing
- */
+//old code getting it out of the way for now
 public class Balance {
 //    int smoothing, loop;
 //    double smoothed, lastUpdate, balanceVal, precision;
