@@ -5,8 +5,6 @@ import edu.wpi.first.wpilibj.*;
 import edu.wpi.first.wpilibj.camera.AxisCamera;
 import java.io.EOFException;
 import java.io.IOException;
-import java.util.Enumeration;
-import java.util.Hashtable;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -138,7 +136,10 @@ public class Team869 extends RobotBase {
                 recorder.wDouble(leftStick.getY());
                 recorder.wDouble(rightStick.getY());
             } catch (IOException ex) {
-                ex.printStackTrace();
+                //only stacktrace if we are not on the field
+                if(!ds.isFMSAttached()) {
+                    ex.printStackTrace();
+                }
             }
         }
     }

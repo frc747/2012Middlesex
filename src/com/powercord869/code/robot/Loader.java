@@ -4,7 +4,9 @@
  */
 package com.powercord869.code.robot;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.EOFException;
+import java.io.IOException;
 import javax.microedition.io.Connector;
 
 /**
