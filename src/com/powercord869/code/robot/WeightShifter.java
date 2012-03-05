@@ -11,7 +11,7 @@ import edu.wpi.first.wpilibj.Victor;
  *
  * @author programing
  */
-public class WeightShifter {
+public class WeightShifter implements RobotFunction {
     private Victor batteryMotor;
     private DigitalInput batteryLimitFwd, batteryLimitBck;
     

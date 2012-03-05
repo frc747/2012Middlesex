@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj.Victor;
  *
  * @author programing
  */
-public class Lift {
+public class Lift implements RobotFunction {
     private double speed;
     private DigitalInput liftLimitFrontUp, liftLimitFrontDown, liftLimitBackUp, liftLimitBackDown;
     private Jaguar liftMotorFront, liftMotorBack;

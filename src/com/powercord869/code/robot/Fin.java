@@ -11,7 +11,7 @@ import edu.wpi.first.wpilibj.Victor;
  *
  * @author programing
  */
-public class Fin {
+public class Fin implements RobotFunction {
     private double forwardSpeed, backSpeed;
     private Victor motor;
     private DigitalInput limitForward, limitBack;

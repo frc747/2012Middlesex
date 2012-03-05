@@ -10,7 +10,7 @@ import edu.wpi.first.wpilibj.Victor;
  *
  * @author programing
  */
-public class Drive {
+public class Drive implements RobotFunction {
     private Victor frontLeftMotor, rearLeftMotor, frontRightMotor, rearRightMotor;
     
     public Drive(int fl, int rl, int fr, int rr) {
