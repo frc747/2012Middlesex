@@ -1,5 +1,5 @@
 //Drive motors are Victors, wheel lift motors are Jaguars.(Addison 2/12/12)
-package com.powercord869.code;
+package com.powercord869.code.robot;
 
 import edu.wpi.first.wpilibj.*;
 import java.io.EOFException;
@@ -14,7 +14,7 @@ import java.util.Hashtable;
  * creating this project, you must also update the manifest file in the resource
  * directory.
  */
-public class RobotTemplate extends RobotBase {
+public class Team869 extends RobotBase {
     //Constants
     int AUTOOFF = 869; //needed a magic value other than -1, 0, and 1
     int STOP = 0;
@@ -53,7 +53,7 @@ public class RobotTemplate extends RobotBase {
     Encoder batteryEncoder;
 
     // constructor for robot variables
-    public RobotTemplate() {
+    public Team869() {
         super(); // Invokes the RobotBase constructor [aka private RobotBase()]
         
         //variables

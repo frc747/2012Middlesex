@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.powercord869.code;
+package com.powercord869.code.robot;
 
 import java.io.*;
 import javax.microedition.io.Connector;
