@@ -22,28 +22,28 @@ public class Team869 extends RobotBase {
     
     //PWMs
         //Drive
-            private int frontLeftMotor = 4;
-            private int rearLeftMotor = 5;
+            private int frontLeftMotor = 5;
+            private int rearLeftMotor = 6;
             private int frontRightMotor = 1;
             private int rearRightMotor = 2;
         //Lift
-            private int liftMotorFront = 7;
-            private int liftMotorBack = 8;
+            private int liftMotorFront = 8;
+            private int liftMotorBack = 7;
         //Fin
-            private int finMotor = 6;
+            private int finMotor = 3;
         //Weight
-            private int batteryMotor = 3;
+            private int batteryMotor = 4;
     //DI/Os
         //Lift
             private int liftLimitFrontUp = 3;
             private int liftLimitFrontDown = 4;
-            private int liftLimitBackUp = 1;
-            private int liftLimitBackDown = 2;
+            private int liftLimitBackUp = 2;
+            private int liftLimitBackDown = 1;
         //Fin
-            private int finLimitForward = 6;
-            private int finLimitBack = 5;
+            private int finLimitForward = 8;
+            private int finLimitBack = 9;
         //Weight
-            private int batteryLimitFwd = 8;
+            private int batteryLimitFwd = 10;
             private int batteryLimitBck = 7;
             
     // Declare variables SO MANY VARIABLES!!!
@@ -65,7 +65,7 @@ public class Team869 extends RobotBase {
     //unused right now
     private ADXL345_I2C accel;
     private Gyro gyro;
-    private Encoder batteryEncoder;
+    private Encoder left, right;
 
     // constructor for robot variables
     public Team869() {
@@ -82,7 +82,7 @@ public class Team869 extends RobotBase {
         //camera setup in theory should just work because we are already doing LCD.update()
         camera = AxisCamera.getInstance();
         camera.writeResolution(AxisCamera.ResolutionT.k320x240);
-        camera.writeBrightness(0);
+        camera.writeBrightness(50);
         
         // create a stopwatch timer
         stopwatch = new Timer();
@@ -106,7 +106,11 @@ public class Team869 extends RobotBase {
         //PORTS CAN BE FROM 1-14
         
         //encoder
-        batteryEncoder = new Encoder(1,9,1,10);
+        right = new Encoder(1,11,1,12,true);
+        left = new Encoder(1,13,1,14,false);
+        
+        //1pulse / (425 pulses per revolution / 2*PI*r circumference )
+        right.setDistancePerPulse((double)1/(425/(2*Math.PI*3)));
         
         /***************************** ANALOG I/O *****************************/
         //PORTS CAN BE FROM 1-8
@@ -116,7 +120,7 @@ public class Team869 extends RobotBase {
         /******************************* OTHER  *******************************/
         
         //2Gs of force gives us the most resolution at low forces
-        //which is what we will be dealing with balancing
+        //which ifs what we will be dealing with balancing
         accel = new ADXL345_I2C(1, ADXL345_I2C.DataFormat_Range.k2G);
         
         /****************************** COMPLETE ******************************/
@@ -127,6 +131,15 @@ public class Team869 extends RobotBase {
     //set our drive motor bounds by percent uniformly and drive the robot
     private void drive(int percent) {
         drive.percentTankDrive(leftStick.getY(), rightStick.getY(), percent);
+    }
+    
+    //set our drive motor bounds by percent uniformly and drive the robot
+    public boolean driveBattery(int percent) {
+        int val = (int)((percent/100)*operatorStick.getY());
+        //tell the driver the current drive percentage
+        LCD.print(5, val+"% speed");
+        //take joystick inputs and drive the robot
+        return weight.move(val);
     }
     
     //record different things about the robot
@@ -169,6 +182,10 @@ public class Team869 extends RobotBase {
     // robot would be put here.
     protected void robotInit() {
         stopwatch.start();
+        
+        right.start();
+        left.start();
+        
         // let the drivers know that we have initialized the robot
         LCD.print("Robot Initialized");
     }
@@ -197,6 +214,8 @@ public class Team869 extends RobotBase {
             recording = false;
         }
         
+        System.out.println("right: "+right.getDistance());
+        
         LCD.update(); 
     }
 
@@ -212,6 +231,9 @@ public class Team869 extends RobotBase {
         weight.stop();
         //commenting out for now, very possibly could break things
 //        calebrateGyro();
+        
+        right.reset();
+        left.reset();
     }
 
     //run autonomous code for begining of match
@@ -264,9 +286,9 @@ public class Team869 extends RobotBase {
         
         //battery code
         if(operatorStick.getRawButton(1)) {
-            weight.drive(BATTERY);
+            driveBattery(BATTERY);
         } else {
-            weight.drive(100);
+            driveBattery(100);
         }
     }
 

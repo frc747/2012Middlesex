@@ -12,7 +12,7 @@ import edu.wpi.first.wpilibj.Victor;
  * @author programing
  */
 public class Fin implements RobotFunction {
-    private double forwardSpeed, backSpeed;
+    private final double forwardSpeed, backSpeed;
     private Victor motor;
     private DigitalInput limitForward, limitBack;
     
@@ -27,14 +27,18 @@ public class Fin implements RobotFunction {
     }
     
     public void forward() {
-        if(limitForward.get()) {
+        if(!limitForward.get()) {
             motor.set(forwardSpeed);
+        } else {
+            motor.set(0);
         }
     }
     
     public void backward() {
-        if(limitBack.get()) {
+        if(!limitBack.get()) {
             motor.set(backSpeed);
+        } else {
+            motor.set(0);
         }
     }
     

@@ -43,12 +43,4 @@ public class WeightShifter implements RobotFunction {
     public void stop() {
         batteryMotor.set(0);
     }
-    
-    //set our drive motor bounds by percent uniformly and drive the robot
-    public boolean drive(double value) {
-        //tell the driver the current drive percentage
-        LCD.print(5, value*100+"% speed");
-        //take joystick inputs and drive the robot
-        return move(value);
-    }
 }
