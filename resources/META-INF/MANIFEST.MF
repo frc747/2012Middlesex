@@ -1,6 +1,6 @@
 MIDlet-Name: team869
 MIDlet-Version: 1.0.0
 MIDlet-Vendor: FIRST
-MIDlet-1: RobotTemplate, ,  com.powercord869.code.RobotTemplate
+MIDlet-1: Team869, , com.powercord869.code.robot.Team869
 MicroEdition-Profile: IMP-1.0
 MicroEdition-Configuration: CLDC-1.1
