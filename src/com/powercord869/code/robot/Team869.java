@@ -67,6 +67,9 @@ public class Team869 extends RobotBase {
     private ADXL345_I2C accel;
     private Gyro gyro;
     private Encoder left, right;
+    
+    //autonomous flags
+    private boolean prepLeft, prepRight;
 
     // constructor for robot variables
     public Team869() {
@@ -89,6 +92,8 @@ public class Team869 extends RobotBase {
         stopwatch = new Timer();
         
         kinect = new FRCKinect();
+        prepLeft = false;
+        prepRight = false;
         
         drive = new Drive(frontLeftMotor, rearLeftMotor, frontRightMotor, rearRightMotor);
         lift = new Lift(LIFT, liftMotorFront, liftMotorBack, liftLimitFrontUp, liftLimitFrontDown, liftLimitBackUp, liftLimitBackDown);
@@ -231,13 +236,28 @@ public class Team869 extends RobotBase {
         if(kinect.getEnabled()) {
             //left arm is left drive, right arm is right drive
             drive.tankDrive(kinect.getLeftY(),kinect.getRightY(),.25);
+            
+            // this IN THEORY:
+            // should prep a kick by moving back then
+            // make the fin go all the way forward or back depending on the leg kicked
+            // we can keep the fin in that direction because the limits will stop it
+            if(!prepRight && kinect.getBody(FRCKinect.rightLegBack)) {
+                prepRight = true;
+            } else if(prepRight && kinect.getBody(FRCKinect.rightLegForward)) {
+                prepRight = false;
+                fin.forward();
+            } else if(!prepLeft && kinect.getBody(FRCKinect.leftLegBack)) {
+                prepLeft = true;
+            } else if(prepLeft && kinect.getBody(FRCKinect.leftLegForward)) {
+                prepLeft = false;
+                fin.backward();
+            }
         } else {
             //if the person is not in front or not with arms out to their side kill drive
             drive.stop();
+            fin.stop();
         }
-        
         //kill everything else
-        fin.stop();
         lift.stop();
         weight.stop();
         
