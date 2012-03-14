@@ -15,43 +15,44 @@ import java.io.IOException;
  */
 public class Team869 extends RobotBase {
     //Constants    
-    private int BATTERY = 50;
-    private double FINFWD = .5;
-    private double FINBACK = -.4;
-    private double LIFT = 1;
+    private static final double BATTERY = .5;
+    private static final double FINFWD = .5;
+    private static final double FINBACK = -.4;
+    private static final double LIFT = 1;
     
     //PWMs
         //Drive
-            private int frontLeftMotor = 5;
-            private int rearLeftMotor = 6;
-            private int frontRightMotor = 1;
-            private int rearRightMotor = 2;
+            private static final int frontLeftMotor = 5;
+            private static final int rearLeftMotor = 6;
+            private static final int frontRightMotor = 1;
+            private static final int rearRightMotor = 2;
         //Lift
-            private int liftMotorFront = 8;
-            private int liftMotorBack = 7;
+            private static final int liftMotorFront = 8;
+            private static final int liftMotorBack = 7;
         //Fin
-            private int finMotor = 3;
+            private static final int finMotor = 3;
         //Weight
-            private int batteryMotor = 4;
+            private static final int batteryMotor = 4;
     //DI/Os
         //Lift
-            private int liftLimitFrontUp = 3;
-            private int liftLimitFrontDown = 4;
-            private int liftLimitBackUp = 2;
-            private int liftLimitBackDown = 1;
+            private static final int liftLimitFrontUp = 3;
+            private static final int liftLimitFrontDown = 4;
+            private static final int liftLimitBackUp = 2;
+            private static final int liftLimitBackDown = 1;
         //Fin
-            private int finLimitForward = 8;
-            private int finLimitBack = 9;
+            private static final int finLimitForward = 8;
+            private static final int finLimitBack = 9;
         //Weight
-            private int batteryLimitFwd = 10;
-            private int batteryLimitBck = 7;
+            private static final int batteryLimitFwd = 10;
+            private static final int batteryLimitBck = 7;
             
     // Declare variables SO MANY VARIABLES!!!
     private int mode;
     private DriverStation ds;
     private AxisCamera camera;
     private Timer stopwatch;
-    private Joystick rightStick, leftStick, operatorStick;
+    private Joystick leftStick, rightStick, operatorStick;
+    private FRCKinect kinect;
     
     private boolean recording;
     private Recorder recorder;
@@ -86,6 +87,8 @@ public class Team869 extends RobotBase {
         
         // create a stopwatch timer
         stopwatch = new Timer();
+        
+        kinect = new FRCKinect();
         
         drive = new Drive(frontLeftMotor, rearLeftMotor, frontRightMotor, rearRightMotor);
         lift = new Lift(LIFT, liftMotorFront, liftMotorBack, liftLimitFrontUp, liftLimitFrontDown, liftLimitBackUp, liftLimitBackDown);
@@ -128,20 +131,6 @@ public class Team869 extends RobotBase {
         LCD.print("Constructor Completed");
     }
     
-    //set our drive motor bounds by percent uniformly and drive the robot
-    private void drive(int percent) {
-        drive.percentTankDrive(leftStick.getY(), rightStick.getY(), percent);
-    }
-    
-    //set our drive motor bounds by percent uniformly and drive the robot
-    public boolean driveBattery(int percent) {
-        int val = (int)((percent/100)*operatorStick.getY());
-        //tell the driver the current drive percentage
-        LCD.print(5, val+"% speed");
-        //take joystick inputs and drive the robot
-        return weight.move(val);
-    }
-    
     //record different things about the robot
     private void record() {
         if(recording && recorder != null) {
@@ -164,7 +153,7 @@ public class Team869 extends RobotBase {
                 if(loader == null) {
                     loader = new Loader("file:///auto1.log");
                 }
-//                drive(loader.rDouble(),loader.rDouble());
+//                drive.tankDrive(loader.rDouble(),loader.rDouble());
             }
         } catch (EOFException ex) {
             LCD.print(6,"end of recording");
@@ -238,17 +227,18 @@ public class Team869 extends RobotBase {
 
     //run autonomous code for begining of match
     protected void autonomous() {
-//        if(this.stopwatch.get() < 2) {
-//            drive(100); //forward
-//            setFinMotor(FWD); //push the fin all the way forward
-//        } else {
+        //if person is ready in front of kinect
+        if(kinect.getEnabled()) {
+            //left arm is left drive, right arm is right drive
+            drive.tankDrive(kinect.getLeftY(),kinect.getRightY(),.25);
+        } else {
+            //if the person is not in front or not with arms out to their side kill drive
             drive.stop();
-            //drive(100); //forward
-            fin.stop(); //push the fin all the way forward
-//        }
-        //kill lift
+        }
+        
+        //kill everything else
+        fin.stop();
         lift.stop();
-        //kill battery
         weight.stop();
         
         //playback recorded autonomous
@@ -262,13 +252,13 @@ public class Team869 extends RobotBase {
         
         // drive code
         if (rightStick.getRawButton(1) == true && leftStick.getRawButton(1) == true) {
-            drive(75);
+            drive(.75);
             lift.down();
         } else if (rightStick.getRawButton(1) == true || leftStick.getRawButton(1) == true) {
-            drive(50);
+            drive(.50);
             lift.down();
         } else {
-            drive(100);
+            drive(1);
             if(rightStick.getRawButton(2)) {
                 lift.down();
             } else {
@@ -288,7 +278,7 @@ public class Team869 extends RobotBase {
         if(operatorStick.getRawButton(1)) {
             driveBattery(BATTERY);
         } else {
-            driveBattery(100);
+            driveBattery(1);
         }
     }
 
@@ -313,6 +303,17 @@ public class Team869 extends RobotBase {
                 teleoperated(); // run teleoperated code
             }
         } // end while loop SHOULD NEVER HAPPEN OR THE ROBOT IS DEAD
+    }
+    
+    //set our drive motor bounds by percent uniformly and drive the robot
+    private void drive(double percent) {
+        drive.tankDrive(leftStick.getY(), rightStick.getY(), percent);
+    }
+    
+    //set our drive motor bounds by percent uniformly and drive the robot
+    private boolean driveBattery(double percent) {
+        //take joystick inputs and drive the battery
+        return weight.move(operatorStick.getY(), percent);
     }
     
     //mode changer for general robot modes

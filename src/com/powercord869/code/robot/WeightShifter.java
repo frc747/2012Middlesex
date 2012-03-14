@@ -23,6 +23,15 @@ public class WeightShifter implements RobotFunction {
         batteryLimitBck = new DigitalInput(1,limB);
     }
     
+    //set our drive motor bounds by percent uniformly and drive the robot
+    public boolean move(double value, double percent) {
+        int val = (int)(value*percent);
+        //tell the driver the current drive percentage
+        LCD.print(5, val+"% speed");
+        //take joystick inputs and drive the robot
+        return move(val);
+    }
+    
     //set the batery speed controller with the given value if we can move it in that direction
     public boolean move(double value) {
         if(value>0) {

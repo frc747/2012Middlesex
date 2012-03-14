@@ -15,6 +15,7 @@ public class Lift implements RobotFunction {
     private final double speed;
     private DigitalInput liftLimitFrontUp, liftLimitFrontDown, liftLimitBackUp, liftLimitBackDown;
     private Jaguar liftMotorFront, liftMotorBack;
+    private boolean front, back;
     
     public Lift(double speed, int front, int back, int limFU, int limFD, int limBU, int limBD) {
         this.speed = speed;
@@ -30,43 +31,63 @@ public class Lift implements RobotFunction {
     }
     
     public void stop() {
-        setFront(0);
-        setBack(0);
+        liftMotorFront.set(0);
+        liftMotorFront.set(0);
     }
     
-    public void setFront(double thisSpeed) {
-        liftMotorFront.set(thisSpeed);
-    }
-    
-    public void setBack(double thisSpeed) {
-        liftMotorBack.set(thisSpeed);
-    }
-    
-    public void down() {
+    public int down() {
+        front = false;
+        back = false;
         if(liftLimitFrontDown.get()) {
-            setFront(-speed);
+            liftMotorFront.set(-speed);
+            front = true;
         } else {
-            setFront(0);
+            liftMotorFront.set(0);
         }
         
         if(liftLimitBackDown.get()) {
-            setBack(-speed);
+            liftMotorBack.set(-speed);
+            back = true;
         } else {
-            setBack(0);
+            liftMotorBack.set(0);
+        }
+        
+        if(back&&front) {
+            return 3;
+        } else if(front) {
+            return 2;
+        } else if(back) {
+            return 1;
+        } else {
+            return 0;
         }
     }
     
-    public void up() {
+    public int up() {
+        front = false;
+        back = false;
         if(liftLimitFrontUp.get()) {
-            setFront(speed);
+            liftMotorFront.set(speed);
+            front = true;
         } else {
-            setFront(0);
+            liftMotorFront.set(0);
         }
         
         if(liftLimitBackUp.get()) {
-            setBack(speed);
+            liftMotorBack.set(speed);
+            back = true;
         } else {
-            setBack(0);
+            liftMotorBack.set(0);
+        }
+        
+        if(back&&front) {
+            return 3;
+        } else if(front) {
+            return 2;
+        } else if(back) {
+            return 1;
+        } else {
+            return 0;
         }
     }
 }

@@ -26,20 +26,24 @@ public class Fin implements RobotFunction {
         limitBack = new DigitalInput(1,limB);
     }
     
-    public void forward() {
+    public boolean forward() {
         if(!limitForward.get()) {
             motor.set(forwardSpeed);
+            return true;
         } else {
             motor.set(0);
         }
+        return false;
     }
     
-    public void backward() {
+    public boolean backward() {
         if(!limitBack.get()) {
             motor.set(backSpeed);
+            return true;
         } else {
             motor.set(0);
         }
+        return false;
     }
     
     public void stop() {

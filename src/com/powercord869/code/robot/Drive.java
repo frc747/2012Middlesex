@@ -21,12 +21,12 @@ public class Drive implements RobotFunction {
         rearRightMotor = new Victor(1,rr);
     }
     
-    public void percentTankDrive(double left, double right, int percent) {
+    public void tankDrive(double left, double right, double percent) {
         //tell the driver the current drive percentage
-        LCD.print(4, percent+"% speed");
+        LCD.print(4, percent*100+"% speed");
         //take values and drive the robot
-        double percentRight = (right*percent/100);
-        double percentLeft = (left*percent/100);
+        double percentRight = (right*percent);
+        double percentLeft = (left*percent);
         tankDrive(percentLeft,percentRight);
     }
     
