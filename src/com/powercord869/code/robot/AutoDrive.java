@@ -58,6 +58,7 @@ public class AutoDrive extends Drive {
             }
         } else {
             LCD.print(sig+" complete");
+            this.stop();
         }
     }
 }
