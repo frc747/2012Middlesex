@@ -2,6 +2,7 @@
 package com.powercord869.code.robot;
 
 import edu.wpi.first.wpilibj.*;
+import edu.wpi.first.wpilibj.DriverStationEnhancedIO.EnhancedIOException;
 import edu.wpi.first.wpilibj.camera.AxisCamera;
 import java.io.EOFException;
 import java.io.IOException;
@@ -55,12 +56,12 @@ public class RobotMain extends RobotBase {
         //Encoder Values
             private final double diameter = 6;
             private final double driveRatio = 26.0/12.0;
-            private final double distance = 10;
             private final int ticks = 250;
             
     // Declare variables SO MANY VARIABLES!!!
     private int mode;
     public static DriverStation ds;
+    public static DriverStationEnhancedIO dsIO;
     public static AxisCamera camera;
     public static Timer stopwatch;
     public static Joystick leftStick, rightStick, operatorStick;
@@ -89,6 +90,7 @@ public class RobotMain extends RobotBase {
         // it already exists and we need to access it in our program
         // get the cRIO instance
         ds = DriverStation.getInstance();
+        dsIO = ds.getEnhancedIO();
         
         //camera setup in theory should just work because we are already doing LCD.update()
         camera = AxisCamera.getInstance();
@@ -102,7 +104,7 @@ public class RobotMain extends RobotBase {
         prepLeft = false;
         prepRight = false;
         
-        drive = new AutoDrive(frontLeftMotor, rearLeftMotor, frontRightMotor, rearRightMotor, rightA, rightB, leftA, leftB, diameter, driveRatio, distance, ticks);
+        drive = new AutoDrive(frontLeftMotor, rearLeftMotor, frontRightMotor, rearRightMotor, rightA, rightB, leftA, leftB, diameter, driveRatio, ticks);
         lift = new Lift(LIFT, liftMotorFront, liftMotorBack, liftLimitFrontUp, liftLimitFrontDown, liftLimitBackUp, liftLimitBackDown);
         fin = new Fin(FINFWD, FINBACK, finMotor, finLimitForward, finLimitBack);
         weight = new WeightShifter(batteryMotor, batteryLimitFwd, batteryLimitBck);
@@ -173,7 +175,6 @@ public class RobotMain extends RobotBase {
     // robot would be put here.
     protected void robotInit() {
         stopwatch.start();
-        
         drive.start();
         
         // let the drivers know that we have initialized the robot
@@ -247,6 +248,7 @@ public class RobotMain extends RobotBase {
             }
         } else {
             //if the person is not in front or not with arms out to their side kill drive
+            //also can essentially use the kinect as a safety measure
             fin.stop();
             drive.auto();
         }
