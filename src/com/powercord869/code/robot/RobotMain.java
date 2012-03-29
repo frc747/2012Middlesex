@@ -62,7 +62,7 @@ public class RobotMain extends RobotBase {
     private int mode;
     public static DriverStation ds;
     public static DriverStationEnhancedIO dsIO;
-    public static AxisCamera camera;
+//    public static AxisCamera camera;
     public static Timer stopwatch;
     public static Joystick leftStick, rightStick, operatorStick;
     public static FRCKinect kinect;
@@ -93,9 +93,9 @@ public class RobotMain extends RobotBase {
         dsIO = ds.getEnhancedIO();
         
         //camera setup in theory should just work because we are already doing LCD.update()
-        camera = AxisCamera.getInstance();
-        camera.writeResolution(AxisCamera.ResolutionT.k320x240);
-        camera.writeBrightness(50);
+//        camera = AxisCamera.getInstance();
+//        camera.writeResolution(AxisCamera.ResolutionT.k320x240);
+//        camera.writeBrightness(50);
         
         // create a stopwatch timer
         stopwatch = new Timer();
@@ -308,14 +308,20 @@ public class RobotMain extends RobotBase {
                 changeMode(0);
                 LCD.print("Disable " + stopwatch.get() + " sec"); //I ran out of lines to print to D:
                 disabled(); // run disabled code
+                Timer.delay(0.001);
             } else if (isAutonomous() && isEnabled()) {
                 changeMode(1);
                 LCD.print("Auto " + stopwatch.get() + " sec");
-                autonomous(); // run the autonomous code
+//                autonomous(); // run the autonomous code
+                Timer.delay(0.001);
             } else if (isOperatorControl() && isEnabled()) {
                 changeMode(2);
                 LCD.print("Teleop " + stopwatch.get() + " sec");
                 teleoperated(); // run teleoperated code
+                Timer.delay(0.001);
+            } else {
+                LCD.print("Unknown " + stopwatch.get() + " sec");
+                Timer.delay(0.001);
             }
         } // end while loop SHOULD NEVER HAPPEN OR THE ROBOT IS DEAD
     }
