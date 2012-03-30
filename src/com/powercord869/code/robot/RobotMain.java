@@ -56,12 +56,10 @@ public class RobotMain extends RobotBase {
         //Encoder Values
             private final double diameter = 6;
             private final double driveRatio = 26.0/12.0;
-            private final int ticks = 250;
             
     // Declare variables SO MANY VARIABLES!!!
     private int mode;
     public static DriverStation ds;
-    public static DriverStationEnhancedIO dsIO;
 //    public static AxisCamera camera;
     public static Timer stopwatch;
     public static Joystick leftStick, rightStick, operatorStick;
@@ -71,10 +69,11 @@ public class RobotMain extends RobotBase {
     private Recorder recorder;
     private Loader loader;
     
-    public static AutoDrive drive;
+    public static Drive drive;
     public static Lift lift;
     public static Fin fin;
     public static WeightShifter weight;
+    public static Autonomous auto;
     
     //autonomous flags
     private boolean prepLeft, prepRight;
@@ -90,7 +89,6 @@ public class RobotMain extends RobotBase {
         // it already exists and we need to access it in our program
         // get the cRIO instance
         ds = DriverStation.getInstance();
-        dsIO = ds.getEnhancedIO();
         
         //camera setup in theory should just work because we are already doing LCD.update()
 //        camera = AxisCamera.getInstance();
@@ -104,10 +102,11 @@ public class RobotMain extends RobotBase {
         prepLeft = false;
         prepRight = false;
         
-        drive = new AutoDrive(frontLeftMotor, rearLeftMotor, frontRightMotor, rearRightMotor, rightA, rightB, leftA, leftB, diameter, driveRatio, ticks);
+        drive = new Drive(frontLeftMotor, rearLeftMotor, frontRightMotor, rearRightMotor);
         lift = new Lift(LIFT, liftMotorFront, liftMotorBack, liftLimitFrontUp, liftLimitFrontDown, liftLimitBackUp, liftLimitBackDown);
         fin = new Fin(FINFWD, FINBACK, finMotor, finLimitForward, finLimitBack);
         weight = new WeightShifter(batteryMotor, batteryLimitFwd, batteryLimitBck);
+        auto = new Autonomous(leftA, leftB, rightA, rightB, diameter, driveRatio);
         
         /******************************** USB  ********************************/
         // Define joysticks on the Driver Station
@@ -121,7 +120,6 @@ public class RobotMain extends RobotBase {
         
         /**************************** DIGITAL I/O  ****************************/
         //PORTS CAN BE FROM 1-14
-        
         
         /***************************** ANALOG I/O *****************************/
         //PORTS CAN BE FROM 1-8
@@ -175,7 +173,7 @@ public class RobotMain extends RobotBase {
     // robot would be put here.
     protected void robotInit() {
         stopwatch.start();
-        drive.start();
+        auto.start();
         
         // let the drivers know that we have initialized the robot
         LCD.print("Robot Initialized");
@@ -204,7 +202,7 @@ public class RobotMain extends RobotBase {
 //        } else {
 //            recording = false;
 //        }
-        
+        LCD.print(2, auto.encoderVals());
         LCD.update(); 
     }
 
@@ -221,37 +219,37 @@ public class RobotMain extends RobotBase {
         //commenting out for now, very possibly could break things
 //        calebrateGyro();
         
-        drive.reset();
+        auto.reset();
     }
 
     //run autonomous code for begining of match
     protected void autonomous() {
         //if person is ready in front of kinect
-        if(kinect.getEnabled()) {
-            //left arm is left drive, right arm is right drive
-            drive.tankDrive(kinect.getLeftY(),kinect.getRightY(),.25);
-            
-            // this IN THEORY:
-            // should prep a kick by moving back then
-            // make the fin go all the way forward or back depending on the leg kicked
-            // we can keep the fin in that direction because the limits will stop it
-            if(!prepRight && kinect.getBody(FRCKinect.rightLegBack)) {
-                prepRight = true;
-            } else if(prepRight && kinect.getBody(FRCKinect.rightLegForward)) {
-                prepRight = false;
-                fin.forward();
-            } else if(!prepLeft && kinect.getBody(FRCKinect.leftLegBack)) {
-                prepLeft = true;
-            } else if(prepLeft && kinect.getBody(FRCKinect.leftLegForward)) {
-                prepLeft = false;
-                fin.backward();
-            }
-        } else {
+//        if(kinect.getEnabled()) {
+//            //left arm is left drive, right arm is right drive
+//            drive.tankDrive(kinect.getLeftY(),kinect.getRightY(),.25);
+//            
+//            // this IN THEORY:
+//            // should prep a kick by moving back then
+//            // make the fin go all the way forward or back depending on the leg kicked
+//            // we can keep the fin in that direction because the limits will stop it
+//            if(!prepRight && kinect.getBody(FRCKinect.rightLegBack)) {
+//                prepRight = true;
+//            } else if(prepRight && kinect.getBody(FRCKinect.rightLegForward)) {
+//                prepRight = false;
+//                fin.forward();
+//            } else if(!prepLeft && kinect.getBody(FRCKinect.leftLegBack)) {
+//                prepLeft = true;
+//            } else if(prepLeft && kinect.getBody(FRCKinect.leftLegForward)) {
+//                prepLeft = false;
+//                fin.backward();
+//            }
+//        } else {
             //if the person is not in front or not with arms out to their side kill drive
             //also can essentially use the kinect as a safety measure
-            fin.stop();
-            drive.auto();
-        }
+//            fin.stop();
+            auto.auto();
+//        }
         //kill everything else
         lift.stop();
         weight.stop();
@@ -306,13 +304,13 @@ public class RobotMain extends RobotBase {
             common(); // run common code
             if (isDisabled()) {
                 changeMode(0);
-                LCD.print("Disable " + stopwatch.get() + " sec"); //I ran out of lines to print to D:
+                LCD.print("Disable " + stopwatch.get() + " sec");
                 disabled(); // run disabled code
                 Timer.delay(0.001);
             } else if (isAutonomous() && isEnabled()) {
                 changeMode(1);
                 LCD.print("Auto " + stopwatch.get() + " sec");
-//                autonomous(); // run the autonomous code
+                autonomous(); // run the autonomous code
                 Timer.delay(0.001);
             } else if (isOperatorControl() && isEnabled()) {
                 changeMode(2);
