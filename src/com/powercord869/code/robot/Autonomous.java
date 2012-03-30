@@ -17,6 +17,12 @@ public class Autonomous {
     private double circumference;
     private double ratio;
     private int stage;
+    private int desiredCount;
+    private final double full = .25;
+    private final double slower = .2;
+    private int mode;
+    private int comp;
+    private int compCount;
     
     public Autonomous(int leftA, int leftB, int rightA, int rightB, double diameter, double driveRatio) {
         circumference = Math.PI * diameter;
@@ -27,22 +33,25 @@ public class Autonomous {
         drive = RobotMain.drive;
         fin = RobotMain.fin;
         stage = 0;
+        comp = 0;
     }
     
     public void auto() {
-        double distance1 = ds.getAnalogIn(1)*10;
-        double distance2 = ds.getAnalogIn(2)*10;
-        int mode = (ds.getDigitalIn(1)?1:0)+(ds.getDigitalIn(2)?1:0);
+        double distance1 = ds.getAnalogIn(1)*100;
+        double distance2 = ds.getAnalogIn(2)*100;
+        if(ds.getDigitalIn(1)) {
+            mode = LEFT;
+        } else if (ds.getDigitalIn(2)) {
+            mode = RIGHT;
+        } else {
+            mode = CENTER;
+        }
         switch(mode) {
             case CENTER:
                 switch(stage) {
                     case 0:
-                        autoFwd(distance1*.75);
-                        fin.stop();
-                        break;
-                    case 1:
                         fin.forward();
-                        autoFwd(distance1*.25);
+                        autoFwd(distance1);
                         break;
                     default:
                         drive.stop();
@@ -95,58 +104,64 @@ public class Autonomous {
     }
     
     public void autoFwd(double distance) {
-        int desiredCount = calcCount(distance);
+        desiredCount = calcCount(distance);
         int leftCount = left.get();
         int rightCount = right.get();
         double avg = (leftCount+rightCount)/2;
-        if(avg < desiredCount) {
-            if(leftCount > rightCount) {
+        if(avg < desiredCount-60) {
+            if(leftCount > rightCount+10) {
                 LCD.print(3,tag+" right");
-                drive.tankDrive(0, .5);
-            } else if(leftCount < rightCount) {
+                drive.tankDrive(-slower, -full);
+            } else if(leftCount < rightCount-10) {
                 LCD.print(3,tag+" left");
-                drive.tankDrive(.5, 0);
+                drive.tankDrive(-full, -slower);
             } else {
                 LCD.print(3,tag+" forward");
-                drive.tankDrive(.5,.5);
+                drive.tankDrive(-full,-full);
             }
         } else {
             LCD.print(3,tag+" complete");
             drive.stop();
             ++stage;
+            left.reset();
+            right.reset();
         }
     }
     
     public void autoTurn90(boolean turnRight) {
-        int desiredCount = calcCount(ds.getAnalogIn(3)*10);
+        desiredCount = calcCount((Math.PI*24)/4);
+        System.out.println(Double.toString(desiredCount));
         int leftCount = left.get();
         int rightCount = right.get();
-        if(turnRight && leftCount < desiredCount) {
-            if(leftCount > -rightCount) {
-                LCD.print(3,tag+" right");
-                drive.tankDrive(0, -.5);
-            } else if(leftCount < -rightCount) {
-                LCD.print(3,tag+" left");
-                drive.tankDrive(.5, 0);
+        double avg = Math.abs(leftCount)+Math.abs(rightCount)/2;
+        if(turnRight && avg < desiredCount) {
+            if(Math.abs(leftCount) > Math.abs(rightCount)) {
+                LCD.print(3,tag+" right right");
+                drive.tankDrive(-slower, full);
+            } else if(Math.abs(leftCount) < Math.abs(rightCount)) {
+                LCD.print(3,tag+" right left");
+                drive.tankDrive(-full, slower);
             } else {
                 LCD.print(3,tag+" turn right");
-                drive.tankDrive(.5,-.5);
+                drive.tankDrive(-full,full);
             }
-        } else if(rightCount < desiredCount){
-            if(rightCount > -leftCount) {
-                LCD.print(3,tag+" left");
-                drive.tankDrive(-.5, 0);
-            } else if(rightCount < -leftCount) {
-                LCD.print(3,tag+" right");
-                drive.tankDrive(0, .5);
+        } else if(avg < desiredCount){
+            if(Math.abs(rightCount) < Math.abs(leftCount)) {
+                LCD.print(3,tag+" left right");
+                drive.tankDrive(slower, -full);
+            } else if(Math.abs(rightCount) > Math.abs(leftCount)) {
+                LCD.print(3,tag+" left left");
+                drive.tankDrive(full, -slower);
             } else {
                 LCD.print(3,tag+" turn left");
-                drive.tankDrive(-.5,.5);
+                drive.tankDrive(full,-full);
             }
         } else {
             LCD.print(3,tag+" complete");
             drive.stop();
             ++stage;
+            left.reset();
+            right.reset();
         }
     }
     
@@ -164,9 +179,11 @@ public class Autonomous {
     public void reset() {
         left.reset();
         right.reset();
+        stage = 0;
     }
     
-    public String encoderVals() {
-        return "l: "+left.get()+" "+" r: "+right.get();
+    public void encoderVals() {
+        LCD.print(2,"l:"+left.get()+" "+"r:"+right.get()+"w:"+desiredCount);
+        LCD.print(6,"m:"+mode+"s:"+stage);
     }
 }

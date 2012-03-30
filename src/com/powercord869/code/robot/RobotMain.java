@@ -202,7 +202,7 @@ public class RobotMain extends RobotBase {
 //        } else {
 //            recording = false;
 //        }
-        LCD.print(2, auto.encoderVals());
+        auto.encoderVals();
         LCD.update(); 
     }
 
