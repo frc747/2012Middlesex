@@ -18,8 +18,8 @@ public class Autonomous {
     private double ratio;
     private int stage;
     private int desiredCount;
-    private final double full = .25;
-    private final double slower = .2;
+    private final double full = .5;
+    private final double slower = .4;
     private int mode;
     private int comp;
     private int compCount;
@@ -69,7 +69,21 @@ public class Autonomous {
                         fin.stop();
                         break;
                     case 2:
-                        fin.forward();
+                    case 3:
+                    case 4:
+                    case 5:
+                    case 6:
+                    case 7:
+                    case 8:
+                    case 9:
+                    case 10:
+                    case 11:
+                    case 12:
+                        if(!fin.forward()) {
+                            ++stage;
+                        }
+                        break;
+                    case 13:
                         autoFwd(distance2);
                         break;
                     default:
@@ -88,7 +102,21 @@ public class Autonomous {
                         fin.stop();
                         break;
                     case 2:
-                        fin.forward();
+                    case 3:
+                    case 4:
+                    case 5:
+                    case 6:
+                    case 7:
+                    case 8:
+                    case 9:
+                    case 10:
+                    case 11:
+                    case 12:
+                        if(!fin.forward()) {
+                            ++stage;
+                        }
+                        break;
+                    case 13:
                         autoFwd(distance2);
                         break;
                     default:
@@ -129,7 +157,7 @@ public class Autonomous {
     }
     
     public void autoTurn90(boolean turnRight) {
-        desiredCount = calcCount((Math.PI*24)/4);
+        desiredCount = calcCount((Math.PI*27)/4);
         System.out.println(Double.toString(desiredCount));
         int leftCount = left.get();
         int rightCount = right.get();

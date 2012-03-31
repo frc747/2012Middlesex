@@ -36,11 +36,8 @@ public class Lift implements RobotFunction {
     }
     
     public int down() {
-        front = false;
-        back = false;
         if(liftLimitFrontDown.get()) {
             liftMotorFront.set(-speed);
-            front = true;
         } else {
             liftMotorFront.set(0);
         }
@@ -52,11 +49,11 @@ public class Lift implements RobotFunction {
             liftMotorBack.set(0);
         }
         
-        if(back&&front) {
+        if(liftLimitBackDown.get()&&liftLimitFrontDown.get()) {
             return 3;
-        } else if(front) {
+        } else if(liftLimitFrontDown.get()) {
             return 2;
-        } else if(back) {
+        } else if(liftLimitBackDown.get()) {
             return 1;
         } else {
             return 0;
@@ -64,27 +61,23 @@ public class Lift implements RobotFunction {
     }
     
     public int up() {
-        front = false;
-        back = false;
         if(liftLimitFrontUp.get()) {
             liftMotorFront.set(speed);
-            front = true;
         } else {
             liftMotorFront.set(0);
         }
         
         if(liftLimitBackUp.get()) {
             liftMotorBack.set(speed);
-            back = true;
         } else {
             liftMotorBack.set(0);
         }
         
-        if(back&&front) {
+        if(liftLimitBackUp.get()&&liftLimitFrontUp.get()) {
             return 3;
-        } else if(front) {
+        } else if(liftLimitFrontUp.get()) {
             return 2;
-        } else if(back) {
+        } else if(liftLimitBackUp.get()) {
             return 1;
         } else {
             return 0;
