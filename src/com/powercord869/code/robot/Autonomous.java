@@ -14,6 +14,7 @@ public class Autonomous {
     private DriverStation ds;
     private Drive drive;
     private Fin fin;
+    private Lift lift;
     private double circumference;
     private double ratio;
     private int stage;
@@ -32,6 +33,7 @@ public class Autonomous {
         ds = RobotMain.ds;
         drive = RobotMain.drive;
         fin = RobotMain.fin;
+        lift = RobotMain.lift;
         stage = 0;
         comp = 0;
     }
@@ -51,10 +53,12 @@ public class Autonomous {
                 switch(stage) {
                     case 0:
                         fin.forward();
+                        lift.down();
                         autoFwd(distance1);
                         break;
                     default:
                         drive.stop();
+                        lift.up();
                         break;
                 }
                 break;
@@ -84,10 +88,25 @@ public class Autonomous {
                         }
                         break;
                     case 13:
+                    case 14:
+                    case 15:
+                    case 16:
+                    case 17:
+                    case 18:
+                    case 19:
+                    case 20:
+                    case 21:
+                    case 22:
+                        lift.down();
+                        ++stage;
+                        break;
+                    case 23:
                         autoFwd(distance2);
+                        lift.down();
                         break;
                     default:
                         drive.stop();
+                        lift.up();
                         break;
                 }
                 break;
@@ -117,10 +136,26 @@ public class Autonomous {
                         }
                         break;
                     case 13:
+                    case 14:
+                    case 15:
+                    case 16:
+                    case 17:
+                    case 18:
+                    case 19:
+                    case 20:
+                    case 21:
+                    case 22:
+                        if(lift.down()==0) {
+                            ++stage;
+                        }
+                        break;
+                    case 23:
+                        lift.down();
                         autoFwd(distance2);
                         break;
                     default:
                         drive.stop();
+                        lift.up();
                         break;
                 }
                 break;
