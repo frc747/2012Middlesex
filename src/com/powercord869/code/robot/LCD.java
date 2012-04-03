@@ -7,16 +7,53 @@ import edu.wpi.first.wpilibj.DriverStationLCD;
  * @author Michael Chinn
  */
 public class LCD {
-    // get the driver station instance
-    private static DriverStationLCD dsLCD = DriverStationLCD.getInstance();
+    private static final String tagging = ": ";
     
-    //Driver Station Printing helper functions
+    // get the driver station instance
+    private static final DriverStationLCD dsLCD = DriverStationLCD.getInstance();
+    
+    /**
+     * Print string on line 1
+     * @param string 
+     */
     public static void print(String string) {print(1, string, 1);}
+    /**
+     * Print tag and string on line 1
+     * @param tag
+     * @param string 
+     */
+    public static void print(String tag, String string) {print(tag+tagging+string);}
+    /**
+     * print string and tag on given line number
+     * @param line
+     * @param tag
+     * @param string 
+     */
+    public static void print(int line, String tag, String string) {print(line,tag+tagging+string);}
+    /**
+     * print string on line number
+     * @param line
+     * @param string 
+     */
     public static void print(int line, String string) {
         StringBuffer s = new StringBuffer(string);
         s.setLength(DriverStationLCD.kLineLength); //21 currently
         printToCol(line, s.toString(), 1);
     }
+    /**
+     * print tag and string on given line number starting at given column
+     * @param line
+     * @param tag
+     * @param string
+     * @param column 
+     */
+    public static void print(int line, String tag, String string, int column) {print(line,tag+tagging+string,column);}
+    /**
+     * print string on given line number starting at given column
+     * @param line
+     * @param string
+     * @param column 
+     */
     public static void print(int line, String string, int column) {
         printToCol(line,string,column);
     }
@@ -41,6 +78,9 @@ public class LCD {
                 dsLCD.println(DriverStationLCD.Line.kMain6, c, s);
         }
     }
+    /**
+     * Must be called to display any prints
+     */
     public static void update() {
         // actually print all of the dsPrint strings, send to driver computer
         dsLCD.updateLCD();
