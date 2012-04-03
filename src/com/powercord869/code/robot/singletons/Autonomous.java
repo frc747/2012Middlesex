@@ -13,7 +13,8 @@ public class Autonomous extends RobotFunction {
     private final int CENTER = 0;
     private final int LEFT = 1;
     private final int RIGHT = 2;
-    private final int STOP = 3;
+    private final int SUPERLEFT = 3;
+    private final int STOP = 4;
     //LCD tag
     private final String tag = "auto";
     //encoder calculations
@@ -89,18 +90,20 @@ public class Autonomous extends RobotFunction {
             mode = RIGHT;
         } else if(ds.ds().getDigitalIn(1)) {
             mode = LEFT;
+        } else if(ds.ds().getDigitalIn(4)) {
+            mode = SUPERLEFT;
         } else {
             mode = STOP;
         }
         switch(mode) {
             case CENTER:
                 switch(stage) {
-                    case 0:
+                    case 0: //forward, lift down, fin forward
                         fin.forward();
                         lift.down();
                         autoFwd(distance1);
                         break;
-                    default:
+                    default://stop
                         lift.up();
                         drive.stop();
                         break;
@@ -109,15 +112,17 @@ public class Autonomous extends RobotFunction {
             case LEFT:
             case RIGHT:
                 switch(stage) {
-                    case 0:
+                    case 0: //forward
                         autoFwd(distance1);
                         fin.stop();
+                        lift.up();
                         break;
-                    case 1:
+                    case 1: //turn left/right depending on mode
                         autoTurn90(mode==LEFT);
                         fin.stop();
+                        lift.up();
                         break;
-                    case 2:
+                    case 2: //fin out, lift down
                         if(!fin.forward() && lift.down()==0) {
                             Timer.delay(0.001);
                             if(!fin.forward() && lift.down()==0) {
@@ -125,11 +130,79 @@ public class Autonomous extends RobotFunction {
                             }
                         }
                         break;
-                    case 3:
+                    case 3: //forward to hit the bridge
                         lift.down();
                         autoFwd(distance2);
                         break;
-                    default:
+                    default://stop
+                        drive.stop();
+                        lift.up();
+                        break;
+                }
+                break;
+            case SUPERLEFT:
+                switch(stage) {
+                    case 0: //forward
+                        autoFwd(distance1);
+                        fin.stop();
+                        lift.up();
+                        break;
+                    case 1: //turn right
+                        autoTurn90(true);
+                        fin.stop();
+                        lift.up();
+                        break;
+                    case 2: //fin out, lift down
+                        if(!fin.forward() && lift.down()==0) {
+                            Timer.delay(0.001);
+                            if(!fin.forward() && lift.down()==0) {
+                                ++stage;
+                            }
+                        }
+                        break;
+                    case 3: // forward
+                        lift.down();
+                        autoFwd(distance2);
+                        break;
+                    case 4: //wait for balls to come off bridge
+                        Timer.delay(1);
+                        ++stage;
+                        break;
+                    case 5: //move backwards same distance we moved forward before
+                        lift.down();
+                        autoFwd(-distance2);
+                        break;
+                    case 6: //fin back in and lift up to spin
+                        if(!fin.backward() && lift.up()==0) {
+                            Timer.delay(0.001);
+                            if(!fin.backward() && lift.up()==0) {
+                                ++stage;
+                            }
+                        }
+                        break;
+                    case 7: //spin 90 right
+                        autoTurn90(true);
+                        fin.stop();
+                        lift.up();
+                        break;
+                    case 8: //spin another 90 right
+                        autoTurn90(true);
+                        fin.stop();
+                        lift.up();
+                        break;
+                    case 9: //fin out, lift down
+                        if(!fin.forward() && lift.down()==0) {
+                            Timer.delay(0.001);
+                            if(!fin.forward() && lift.down()==0) {
+                                ++stage;
+                            }
+                        }
+                        break;
+                    case 10: //forward to hit other bridge
+                        lift.down();
+                        autoFwd(distance2);
+                        break;
+                    default://stop
                         drive.stop();
                         lift.up();
                         break;
