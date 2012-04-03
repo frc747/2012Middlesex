@@ -14,12 +14,12 @@ public class Fin extends RobotControlable {
     public static final double forwardSpeed = .5;
     public static final double backSpeed = -.4;
     
-    private RobotDriverStation controls;
+    private RobotControls controls;
     private Victor motor;
     private DigitalInput limitForward, limitBack;
     
     private Fin() {
-        controls = RobotDriverStation.getInstance();
+        controls = RobotControls.getInstance();
         //setup fin speed controller
         motor = new Victor(1,finMotorPWM);
         //fin limits

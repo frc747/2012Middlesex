@@ -16,8 +16,7 @@ public class RobotMain extends RobotBase {
     private final Fin fin;
     private final WeightShifter weight;
     private final Autonomous auto;
-    private Vector funcitons;
-    private Vector controlable;
+    private Vector funcitons, controlable;
 
     // constructor for robot variables
     public RobotMain() {

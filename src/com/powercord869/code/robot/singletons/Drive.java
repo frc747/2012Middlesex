@@ -17,12 +17,12 @@ public class Drive extends RobotControlable {
     private static final Drive instance = new Drive();
     //drive speed controllers
     private Victor frontLeftMotor, rearLeftMotor, frontRightMotor, rearRightMotor;
-    private RobotDriverStation ds;
+    private RobotControls controls;
     //drive control also controls the lift
     private Lift lift;
     
     private Drive() {
-        ds = RobotDriverStation.getInstance();
+        controls = RobotControls.getInstance();
         lift = Lift.getInstance();
         //setup drive speed controllers
         frontLeftMotor = new Victor(1,frontLeftMotorPWM);
@@ -43,15 +43,15 @@ public class Drive extends RobotControlable {
      * drive the robot via operator control
      */
     public void control() {
-        if (ds.rightStick().getRawButton(1) == true && ds.leftStick().getRawButton(1) == true) {
+        if (controls.rightStick().getRawButton(1) == true && controls.leftStick().getRawButton(1) == true) {
             controlTankDrive(.75);
             lift.down();
-        } else if (ds.rightStick().getRawButton(1) == true || ds.leftStick().getRawButton(1) == true) {
+        } else if (controls.rightStick().getRawButton(1) == true || controls.leftStick().getRawButton(1) == true) {
             controlTankDrive(.50);
             lift.down();
         } else {
             controlTankDrive(1);
-            if(ds.rightStick().getRawButton(2)) {
+            if(controls.rightStick().getRawButton(2)) {
                 lift.down();
             } else {
                 lift.up();
@@ -60,7 +60,7 @@ public class Drive extends RobotControlable {
     }
 
     private void controlTankDrive(double percent) {
-        tankDrive(ds.leftStick().getY(),ds.rightStick().getY(),percent);
+        tankDrive(controls.leftStick().getY(),controls.rightStick().getY(),percent);
     }
     
     /**

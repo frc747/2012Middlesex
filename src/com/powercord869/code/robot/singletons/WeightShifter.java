@@ -18,12 +18,12 @@ public class WeightShifter extends RobotControlable {
     private static final WeightShifter instance = new WeightShifter();
     public static final double speed = .5;
     
-    private RobotDriverStation ds;
+    private RobotControls controls;
     private Victor weightShifterMotor;
     private DigitalInput weightShifterLimitFwd, weightShifterLimitBck;
     
     private WeightShifter() {
-        ds = RobotDriverStation.getInstance();
+        controls = RobotControls.getInstance();
         //setup battery speed controller
         weightShifterMotor = new Victor(1,weightMotorPWM);
         //battery limits
@@ -45,7 +45,7 @@ public class WeightShifter extends RobotControlable {
      * the operator stick y axis controls the weight shifter movement forward and backward
      */
     public void control() {
-        if(ds.operatorStick().getRawButton(1)) {
+        if(controls.operatorStick().getRawButton(1)) {
             controlMove(speed);
         } else {
             controlMove(1);
@@ -58,7 +58,7 @@ public class WeightShifter extends RobotControlable {
      * @return if the weight shifter is moving or not
      */
     private boolean controlMove(double percent) {
-        return move(ds.operatorStick().getY(),percent);
+        return move(controls.operatorStick().getY(),percent);
     }
     
     /**
