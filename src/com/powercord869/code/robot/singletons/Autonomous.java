@@ -15,7 +15,9 @@ public class Autonomous extends RobotFunction {
     private final int LEFT = 1;
     private final int RIGHT = 2;
     private final int SUPERLEFT = 3;
-    private final int STOP = 4;
+    private final int FULLHUMP = 4;
+    private final int FULLBRIDGE = 5;
+    private final int STOP = 6;
     //LCD tag
     private final String tag = "auto";
     //encoder calculations
@@ -103,6 +105,8 @@ public class Autonomous extends RobotFunction {
     public void auto() {
         double distance1 = ds.getAnalogIn(1)*100;
         double distance2 = ds.getAnalogIn(2)*100;
+        double distance3 = ds.getAnalogIn(3)*100;
+        double distance4 = ds.getAnalogIn(4)*100;
         if(ds.getDigitalIn(3)) {
             mode = CENTER;
         } else if(ds.getDigitalIn(2)) {
@@ -111,6 +115,10 @@ public class Autonomous extends RobotFunction {
             mode = LEFT;
         } else if(ds.getDigitalIn(4)) {
             mode = SUPERLEFT;
+        } else if(ds.getDigitalIn(5)) {
+            mode = FULLHUMP;
+        } else if(ds.getDigitalIn(6)) {
+            mode = FULLBRIDGE;
         } else {
             mode = STOP;
         }
@@ -187,14 +195,54 @@ public class Autonomous extends RobotFunction {
                         autoTurn(true,180);
                         break;
                     case 7: //forward to hit other bridge
+                        autoFwd(distance3);
+                        break;
+                    default://stop
+                        drive.stop();
+                        fin.stop();
+                        break;
+                }
+                lift.up();
+                weight.stop();
+                break;
+            case FULLHUMP:
+                switch(stage) {
+                    case 0: //forward
+                        autoFwd(distance1);
+                        break;
+                    case 1: //turn right
+                        autoTurn(true,90);
+                        break;
+                    case 2: //fin out
+                        if(!fin.forward()) {
+                            Timer.delay(0.001);
+                            if(!fin.forward()) {
+                                ++stage;
+                            }
+                        }
+                        break;
+                    case 3: // forward
                         autoFwd(distance2);
+                        break;
+                    case 4: //wait for balls to come off bridge
+                        Timer.delay(wait);
+                        ++stage;
+                        break;
+                    case 5: //move backwards same distance we moved forward before
+                        autoFwd(-distance2);
+                        break;
+                    case 6: //spin 180 right
+                        autoTurn(true,180);
+                        break;
+                    case 7: //forward to hit other bridge
+                        autoFwd(distance3);
                         break;
                     case 8: //wait for balls to come off bridge
                         Timer.delay(wait);
                         ++stage;
                         break;
                     case 9: //move backwards same distance we moved forward before
-                        autoFwd(-distance2);
+                        autoFwd(-distance3);
                         break;
                     case 10: //fin out
                         if(!fin.backward()) {
@@ -205,6 +253,70 @@ public class Autonomous extends RobotFunction {
                         }
                         break;
                     case 11: //spin 90 right
+                        autoTurn(true,90);
+                        break;
+                    default://stop
+                        drive.stop();
+                        fin.stop();
+                        break;
+                }
+                lift.up();
+                weight.stop();
+                break;
+            case FULLBRIDGE:
+                switch(stage) {
+                    case 0: //forward
+                        autoFwd(distance1);
+                        break;
+                    case 1: //turn right
+                        autoTurn(true,90);
+                        break;
+                    case 2: //fin out
+                        if(!fin.forward()) {
+                            Timer.delay(0.001);
+                            if(!fin.forward()) {
+                                ++stage;
+                            }
+                        }
+                        break;
+                    case 3: // forward
+                        autoFwd(distance2);
+                        break;
+                    case 4: //wait for balls to come off bridge
+                        Timer.delay(wait);
+                        ++stage;
+                        break;
+                    case 5: //move backwards same distance we moved forward before
+                        autoFwd(-distance2);
+                        break;
+                    case 6: //spin 180 right
+                        autoTurn(true,180);
+                        break;
+                    case 7: //forward to hit other bridge
+                        autoFwd(distance3);
+                        break;
+                    case 8: //wait for balls to come off bridge
+                        Timer.delay(wait);
+                        ++stage;
+                        break;
+                    case 9: //move backwards same distance we moved forward before
+                        autoFwd(-distance3);
+                        break;
+                    case 10: //fin out
+                        if(!fin.backward()) {
+                            Timer.delay(0.001);
+                            if(!fin.backward()) {
+                                ++stage;
+                            }
+                        }
+                        break;
+                    case 11: //spin 90 left
+                        autoTurn(false,90);
+                        break;
+                    case 12: //forward to hit other bridge
+                        autoFwd(distance4);
+                        break;
+                    case 13: //spin 90 right
                         autoTurn(true,90);
                         break;
                     default://stop
