@@ -189,6 +189,24 @@ public class Autonomous extends RobotFunction {
                     case 7: //forward to hit other bridge
                         autoFwd(distance2);
                         break;
+                    case 8: //wait for balls to come off bridge
+                        Timer.delay(wait);
+                        ++stage;
+                        break;
+                    case 9: //move backwards same distance we moved forward before
+                        autoFwd(-distance2);
+                        break;
+                    case 10: //fin out
+                        if(!fin.backward()) {
+                            Timer.delay(0.001);
+                            if(!fin.backward()) {
+                                ++stage;
+                            }
+                        }
+                        break;
+                    case 11: //spin 90 right
+                        autoTurn(true,90);
+                        break;
                     default://stop
                         drive.stop();
                         fin.stop();
