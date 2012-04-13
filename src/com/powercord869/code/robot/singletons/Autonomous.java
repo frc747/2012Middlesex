@@ -16,7 +16,7 @@ public class Autonomous extends RobotFunction {
     private final int RIGHT = 2;
     private final int SUPERLEFT = 3;
     private final int FULLHUMP = 4;
-    private final int FULLBRIDGE = 5;
+    private final int ALLIANCE = 5;
     private final int STOP = 6;
     //LCD tag
     private final String tag = "auto";
@@ -24,11 +24,12 @@ public class Autonomous extends RobotFunction {
     private final int ticks = 250;
     private final double circumference = Math.PI*6;
     private final double ratio = 26.0/12.0;
-    private final double robotCircumference = Math.PI*27;
+    private final double robotCircumference = Math.PI*24;
     //speed
     private final double full = 1;
     private final double slower = .95;
-    private final double wait = 5;
+    private final double wait = 4;
+    private final int turnDegree = 89;
     
     private Encoder left,right;
     private DriverStation ds;
@@ -40,8 +41,10 @@ public class Autonomous extends RobotFunction {
     private double avg;
     private int stage, mode;
     private int desiredCount, leftCount, rightCount;
+    private Timer stopwatch;
     
     private Autonomous() {
+        stopwatch = new Timer();
         left = new Encoder(1,leftADIO,1,leftBDIO,false);
         right = new Encoder(1,rightADIO,1,rightBDIO,true);
         unused = new Vector();
@@ -103,22 +106,22 @@ public class Autonomous extends RobotFunction {
      * main autonomous function
      */
     public void auto() {
-        double distance1 = ds.getAnalogIn(1)*100;
-        double distance2 = ds.getAnalogIn(2)*100;
-        double distance3 = ds.getAnalogIn(3)*100;
-        double distance4 = ds.getAnalogIn(4)*100;
-        if(ds.getDigitalIn(3)) {
+        double centerFwd = ds.getAnalogIn(1)*100;
+        double lRfwd = ds.getAnalogIn(2)*100;
+        double atCenter = ds.getAnalogIn(3)*100;
+        double atAlliance = ds.getAnalogIn(4)*100;
+        if(ds.getDigitalIn(1)) {
             mode = CENTER;
         } else if(ds.getDigitalIn(2)) {
             mode = RIGHT;
-        } else if(ds.getDigitalIn(1)) {
+        } else if(ds.getDigitalIn(3)) {
             mode = LEFT;
         } else if(ds.getDigitalIn(4)) {
             mode = SUPERLEFT;
         } else if(ds.getDigitalIn(5)) {
             mode = FULLHUMP;
         } else if(ds.getDigitalIn(6)) {
-            mode = FULLBRIDGE;
+            mode = ALLIANCE;
         } else {
             mode = STOP;
         }
@@ -126,10 +129,20 @@ public class Autonomous extends RobotFunction {
             case CENTER:
                 switch(stage) {
                     case 0: //forward, lift down, fin forward
+                        stopwatch.start();
+                        ++stage;
+                        break;
+                    case 1: //forward, lift down, fin forward
+                        if(stopwatch.get()>.5) {
+                            ++stage;
+                        }
                         fin.forward();
-                        autoFwd(distance1);
+                        break;
+                    case 2:
+                        autoFwd(centerFwd);
                         break;
                     default://stop
+                        stopwatch.stop();
                         fin.stop();
                         drive.stop();
                         break;
@@ -141,10 +154,10 @@ public class Autonomous extends RobotFunction {
             case RIGHT:
                 switch(stage) {
                     case 0: //forward
-                        autoFwd(distance1);
+                        autoFwd(lRfwd);
                         break;
                     case 1: //turn left/right depending on mode
-                        autoTurn(mode==LEFT,90);
+                        autoTurn(mode==LEFT,turnDegree);
                         break;
                     case 2: //fin out
                         if(!fin.forward()) {
@@ -155,7 +168,7 @@ public class Autonomous extends RobotFunction {
                         }
                         break;
                     case 3: //forward to hit the bridge
-                        autoFwd(distance2);
+                        autoFwd(atCenter);
                         break;
                     default://stop
                         drive.stop();
@@ -168,10 +181,10 @@ public class Autonomous extends RobotFunction {
             case SUPERLEFT:
                 switch(stage) {
                     case 0: //forward
-                        autoFwd(distance1);
+                        autoFwd(lRfwd);
                         break;
                     case 1: //turn right
-                        autoTurn(true,90);
+                        autoTurn(true,turnDegree);
                         break;
                     case 2: //fin out
                         if(!fin.forward()) {
@@ -182,20 +195,20 @@ public class Autonomous extends RobotFunction {
                         }
                         break;
                     case 3: // forward
-                        autoFwd(distance2);
+                        autoFwd(atCenter);
                         break;
                     case 4: //wait for balls to come off bridge
                         Timer.delay(wait);
                         ++stage;
                         break;
                     case 5: //move backwards same distance we moved forward before
-                        autoFwd(-distance2);
+                        autoFwd(true,atCenter);
                         break;
                     case 6: //spin 180 right
                         autoTurn(true,180);
                         break;
                     case 7: //forward to hit other bridge
-                        autoFwd(distance3);
+                        autoFwd(atAlliance);
                         break;
                     default://stop
                         drive.stop();
@@ -208,10 +221,10 @@ public class Autonomous extends RobotFunction {
             case FULLHUMP:
                 switch(stage) {
                     case 0: //forward
-                        autoFwd(distance1);
+                        autoFwd(lRfwd);
                         break;
                     case 1: //turn right
-                        autoTurn(true,90);
+                        autoTurn(true,turnDegree);
                         break;
                     case 2: //fin out
                         if(!fin.forward()) {
@@ -222,38 +235,41 @@ public class Autonomous extends RobotFunction {
                         }
                         break;
                     case 3: // forward
-                        autoFwd(distance2);
+                        autoFwd(atCenter);
                         break;
                     case 4: //wait for balls to come off bridge
                         Timer.delay(wait);
                         ++stage;
                         break;
                     case 5: //move backwards same distance we moved forward before
-                        autoFwd(-distance2);
+                        autoFwd(true,atCenter);
                         break;
-                    case 6: //spin 180 right
-                        autoTurn(true,180);
+                    case 6: //turn right
+                        autoTurn(true,turnDegree);
                         break;
-                    case 7: //forward to hit other bridge
-                        autoFwd(distance3);
+                    case 7: //turn right
+                        autoTurn(true,35);
                         break;
-                    case 8: //wait for balls to come off bridge
+                    case 8: //forward to hit other bridge
+                        autoFwd(atAlliance);
+                        break;
+                    case 9: //wait for balls to come off bridge
                         Timer.delay(wait);
                         ++stage;
                         break;
-                    case 9: //move backwards same distance we moved forward before
-                        autoFwd(-distance3);
+                    case 10: //move backwards same distance we moved forward before
+                        autoFwd(true,atAlliance);
                         break;
-                    case 10: //fin out
+                    case 11: //fin out
                         if(!fin.backward()) {
-                            Timer.delay(0.001);
+                            Timer.delay(0.01);
                             if(!fin.backward()) {
                                 ++stage;
                             }
                         }
                         break;
-                    case 11: //spin 90 right
-                        autoTurn(true,90);
+                    case 12: //spin 90 right
+                        autoTurn(true,55);
                         break;
                     default://stop
                         drive.stop();
@@ -263,13 +279,13 @@ public class Autonomous extends RobotFunction {
                 lift.up();
                 weight.stop();
                 break;
-            case FULLBRIDGE:
+            case ALLIANCE:
                 switch(stage) {
                     case 0: //forward
-                        autoFwd(distance1);
+                        autoFwd(lRfwd);
                         break;
-                    case 1: //turn right
-                        autoTurn(true,90);
+                    case 1: //turn left/right depending on mode
+                        autoTurn(false,turnDegree);
                         break;
                     case 2: //fin out
                         if(!fin.forward()) {
@@ -279,45 +295,8 @@ public class Autonomous extends RobotFunction {
                             }
                         }
                         break;
-                    case 3: // forward
-                        autoFwd(distance2);
-                        break;
-                    case 4: //wait for balls to come off bridge
-                        Timer.delay(wait);
-                        ++stage;
-                        break;
-                    case 5: //move backwards same distance we moved forward before
-                        autoFwd(-distance2);
-                        break;
-                    case 6: //spin 180 right
-                        autoTurn(true,180);
-                        break;
-                    case 7: //forward to hit other bridge
-                        autoFwd(distance3);
-                        break;
-                    case 8: //wait for balls to come off bridge
-                        Timer.delay(wait);
-                        ++stage;
-                        break;
-                    case 9: //move backwards same distance we moved forward before
-                        autoFwd(-distance3);
-                        break;
-                    case 10: //fin out
-                        if(!fin.backward()) {
-                            Timer.delay(0.001);
-                            if(!fin.backward()) {
-                                ++stage;
-                            }
-                        }
-                        break;
-                    case 11: //spin 90 left
-                        autoTurn(false,90);
-                        break;
-                    case 12: //forward to hit other bridge
-                        autoFwd(distance4);
-                        break;
-                    case 13: //spin 90 right
-                        autoTurn(true,90);
+                    case 3: //forward to hit the bridge
+                        autoFwd(atAlliance);
                         break;
                     default://stop
                         drive.stop();
@@ -333,25 +312,41 @@ public class Autonomous extends RobotFunction {
         }
     }
     
+    private void autoFwd(double distance) {
+        autoFwd(false,distance);
+    }
+    
     /**
      * drive the robot forward
      * @param distance inches
      */
-    private void autoFwd(double distance) {
+    private void autoFwd(boolean backward, double distance) {
         desiredCount = calcCount(distance);
         leftCount = left.get();
         rightCount = right.get();
-        avg = (leftCount+rightCount)/2;
+        avg = Math.abs((leftCount+rightCount)/2);
         if(avg < desiredCount) {
             if(leftCount > rightCount+10) {
                 LCD.print(3,tag+" right");
-                drive.tankDrive(-slower, -full);
+                if(backward) {
+                    drive.tankDrive(slower, full);
+                } else {
+                    drive.tankDrive(-slower, -full);
+                }
             } else if(leftCount < rightCount-10) {
                 LCD.print(3,tag+" left");
-                drive.tankDrive(-full, -slower);
+                if(backward) {
+                    drive.tankDrive(full, slower);
+                } else {
+                    drive.tankDrive(-full, -slower);
+                }
             } else {
                 LCD.print(3,tag+" forward");
-                drive.tankDrive(-full,-full);
+                if(backward) {
+                    drive.tankDrive(full, full);
+                } else {
+                    drive.tankDrive(-full,-full);
+                }
             }
         } else { //avg >= desiredCount
             next();
