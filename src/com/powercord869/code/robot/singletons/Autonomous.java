@@ -204,10 +204,13 @@ public class Autonomous extends RobotFunction {
                     case 5: //move backwards same distance we moved forward before
                         autoFwd(true,atCenter);
                         break;
-                    case 6: //spin 180 right
-                        autoTurn(true,180);
+                    case 6: //turn right
+                        autoTurn(true,turnDegree);
                         break;
-                    case 7: //forward to hit other bridge
+                    case 7: //turn right
+                        autoTurn(true,35);
+                        break;
+                    case 8: //forward to hit other bridge
                         autoFwd(atAlliance);
                         break;
                     default://stop
@@ -248,7 +251,7 @@ public class Autonomous extends RobotFunction {
                         autoTurn(true,turnDegree);
                         break;
                     case 7: //turn right
-                        autoTurn(true,35);
+                        autoTurn(true,38);
                         break;
                     case 8: //forward to hit other bridge
                         autoFwd(atAlliance);
