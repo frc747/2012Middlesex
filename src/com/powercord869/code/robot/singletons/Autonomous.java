@@ -133,13 +133,14 @@ public class Autonomous extends RobotFunction {
                         ++stage;
                         break;
                     case 1: //forward, lift down, fin forward
-                        if(stopwatch.get()>.5) {
-                            ++stage;
-                        }
+//                        if(stopwatch.get()>.5) {
+//                            ++stage;
+//                        }
                         fin.forward();
+                        autoFwd(centerFwd);
                         break;
                     case 2:
-                        autoFwd(centerFwd);
+                        ++stage;
                         break;
                     default://stop
                         stopwatch.stop();
