@@ -1,4 +1,4 @@
-package com.powercord869.code.robot.singletons;
+package com.powercord869.code.robot.components;
 
 import com.powercord869.code.robot.RobotControlable;
 import edu.wpi.first.wpilibj.DigitalInput;
@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.Victor;
 
 /**
  * Fin function of the robot, used in 2012 to allow the robot to push the bridge down
+ * @author programing
  */
 public class Fin extends RobotControlable {
     //create a singleton of this class

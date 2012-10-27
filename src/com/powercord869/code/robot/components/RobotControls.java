@@ -1,7 +1,11 @@
-package com.powercord869.code.robot.singletons;
+package com.powercord869.code.robot.components;
 
 import edu.wpi.first.wpilibj.Joystick;
 
+/**
+ * 
+ * @author programing
+ */
 public class RobotControls {
     //create a singleton of this class
     private static final RobotControls instance = new RobotControls();

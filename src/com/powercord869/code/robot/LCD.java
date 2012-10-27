@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj.DriverStationLCD;
 
 /**
  * Helper to print to the driver station lcd
- * @author Michael Chinn
+ * @author mechinn
  */
 public class LCD {
     private static final String tagging = ": ";

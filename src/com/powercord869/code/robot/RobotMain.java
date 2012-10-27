@@ -1,12 +1,17 @@
 package com.powercord869.code.robot;
 
-import com.powercord869.code.robot.singletons.*;
+import com.powercord869.code.robot.components.Autonomous;
+import com.powercord869.code.robot.components.Drive;
+import com.powercord869.code.robot.components.Fin;
+import com.powercord869.code.robot.components.Lift;
+import com.powercord869.code.robot.components.WeightShifter;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import java.util.Vector;
 
 /**
  * This class is the main class for our robot code, startCompetition is called when cRIO is turned on
+ * @author programing
  */
 public class RobotMain extends RobotBase {
     private int mode;
@@ -16,7 +21,7 @@ public class RobotMain extends RobotBase {
     private final Fin fin;
     private final WeightShifter weight;
     private final Autonomous auto;
-    private Vector funcitons, controlable;
+    private Vector components, controlable;
 
     // constructor for robot variables
     public RobotMain() {
@@ -26,7 +31,7 @@ public class RobotMain extends RobotBase {
         mode = -1;
         
         //vectors to keep all our functions in so we can iterate through them later
-        funcitons = new Vector();
+        components = new Vector();
         controlable = new Vector();
         
         // create a stopwatch timer
@@ -34,22 +39,23 @@ public class RobotMain extends RobotBase {
         
         //robot functions
         drive = Drive.getInstance();
-        funcitons.addElement(drive);
+        components.addElement(drive);
         controlable.addElement(drive);
         
         lift = Lift.getInstance();
-        funcitons.addElement(lift);
+        components.addElement(lift);
         
         fin = Fin.getInstance();
-        funcitons.addElement(fin);
+        components.addElement(fin);
         controlable.addElement(fin);
         
         weight = WeightShifter.getInstance();
-        funcitons.addElement(weight);
+        components.addElement(weight);
         controlable.addElement(weight);
         
         //autonomous setup
         auto = Autonomous.getInstance();
+        components.addElement(auto);
         
         /****************************** COMPLETE ******************************/
         // let the drivers know that we have contructed the variables
@@ -80,11 +86,10 @@ public class RobotMain extends RobotBase {
      * do this while we are disabled
      */
     protected void disabled() {
-        for(int i = 0; i<funcitons.size();++i) {
-            ((RobotFunction)funcitons.elementAt(i)).stop();
+        //loop through all our components and stop them for saftey reasons
+        for(int i = 0; i<components.size();++i) {
+            ((RobotFunction)components.elementAt(i)).stop();
         }
-        
-        auto.reset();
     }
 
     /**
@@ -105,6 +110,7 @@ public class RobotMain extends RobotBase {
 
     /**
      * main function from our perspective, this is what the robot calls when starting
+     * most likely will never need to be touched as all functional code is in functions above
      */
     public void startCompetition() {
         // first and one-time initialization
@@ -116,21 +122,18 @@ public class RobotMain extends RobotBase {
                 changeMode(0);
                 LCD.print("Disable " + stopwatch.get() + " sec");
                 disabled(); // run disabled code
-                Timer.delay(0.001);
             } else if (isAutonomous() && isEnabled()) {
                 changeMode(1);
                 LCD.print("Auto " + stopwatch.get() + " sec");
                 autonomous(); // run the autonomous code
-                Timer.delay(0.001);
             } else if (isOperatorControl() && isEnabled()) {
                 changeMode(2);
                 LCD.print("Teleop " + stopwatch.get() + " sec");
                 teleoperated(); // run teleoperated code
-                Timer.delay(0.001);
             } else {
                 LCD.print("Unknown " + stopwatch.get() + " sec");
-                Timer.delay(0.001);
             }
+            Timer.delay(0.001); //FIRST's fix for maxing CPU
         } // end while loop SHOULD NEVER HAPPEN OR THE ROBOT IS DEAD
     }
     

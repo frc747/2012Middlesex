@@ -1,7 +1,7 @@
 package com.powercord869.code.robot;
 /**
  * All controllable functions of the robot need this function
- * @author mechinn
+ * @author programing
  */
 public abstract class RobotControlable extends RobotFunction {
     /**

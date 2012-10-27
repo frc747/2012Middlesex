@@ -1,4 +1,4 @@
-package com.powercord869.code.robot.singletons;
+package com.powercord869.code.robot.components;
 
 import com.powercord869.code.robot.LCD;
 import com.powercord869.code.robot.RobotFunction;
@@ -7,17 +7,21 @@ import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Timer;
 import java.util.Vector;
 
+/**
+ *
+ * @author programing
+ */
 public class Autonomous extends RobotFunction {
     //create a singleton of this class
     private static final Autonomous instance = new Autonomous();
     //positions
-    private final int CENTER = 0;
-    private final int LEFT = 1;
-    private final int RIGHT = 2;
-    private final int SUPERLEFT = 3;
-    private final int FULLHUMP = 4;
-    private final int ALLIANCE = 5;
-    private final int STOP = 6;
+    private final int STOP = 0;
+    private final int CENTER = 1;
+    private final int LEFT = 2;
+    private final int RIGHT = 3;
+    private final int SUPERLEFT = 4;
+    private final int FULLHUMP = 5;
+    private final int ALLIANCE = 6;
     //LCD tag
     private final String tag = "auto";
     //encoder calculations
@@ -100,6 +104,7 @@ public class Autonomous extends RobotFunction {
         lift.stop();
         left.reset();
         right.reset();
+        stage = STOP;
     }
     
     /**
@@ -310,6 +315,7 @@ public class Autonomous extends RobotFunction {
                 lift.up();
                 weight.stop();
                 break;
+            case STOP:
             default:
                 stop();
                 break;

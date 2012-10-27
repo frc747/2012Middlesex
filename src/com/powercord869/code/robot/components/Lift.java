@@ -1,9 +1,12 @@
-package com.powercord869.code.robot.singletons;
+package com.powercord869.code.robot.components;
 
 import com.powercord869.code.robot.RobotFunction;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Jaguar;
-
+/**
+ * 
+ * @author programing
+ */
 public class Lift extends RobotFunction {
     //create a singleton of this class
     private static final Lift instance = new Lift();

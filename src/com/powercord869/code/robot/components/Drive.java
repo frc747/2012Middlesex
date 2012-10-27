@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.powercord869.code.robot.singletons;
+package com.powercord869.code.robot.components;
 
 import com.powercord869.code.robot.LCD;
 import com.powercord869.code.robot.RobotControlable;

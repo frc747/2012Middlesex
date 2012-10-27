@@ -2,7 +2,7 @@ package com.powercord869.code.robot;
 
 /**
  * All functions of the robot need these methods
- * @author Michael Chinn
+ * @author programing
  */
 public abstract class RobotFunction {
     //Constants, must not have duplicate hardware ports
@@ -37,7 +37,7 @@ public abstract class RobotFunction {
                 protected final int leftADIO = 13;
                 protected final int leftBDIO = 14;
     /**
-     * every function should have a simple way to stop it for disabled mode
+     * every function MUST have a simple way to stop it for disabled mode
      */
     public abstract void stop();
 }
