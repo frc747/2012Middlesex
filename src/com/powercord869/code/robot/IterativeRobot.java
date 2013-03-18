@@ -169,6 +169,7 @@ public abstract class IterativeRobot extends RobotBase {
      * restarts the stopwatch
      */
     private void restartStopwatch() {
+        stopwatch.stop();
         stopwatch.reset();
         stopwatch.start();
     }
