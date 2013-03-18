@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.powercord869.code.robot;
 
 public class RobotMain extends IterativeRobot {
@@ -18,6 +14,9 @@ public class RobotMain extends IterativeRobot {
         
     }
     public void testInit() {
+        
+    }
+    public void robotPeriodic() {
         
     }
     public void disabledPeriodic() {

@@ -74,6 +74,7 @@ public abstract class IterativeRobot extends RobotBase {
                 System.out.println("!!!!! Stop loop!");
                 break;
             }
+            robotPeriodic();
             // Call the appropriate function depending upon the current robot mode
             if (isDisabled()) {
                 // call DisabledInit() if we are now just entering disabled mode from
@@ -204,6 +205,11 @@ public abstract class IterativeRobot extends RobotBase {
      * Initialization code for test mode should go here.
      */
     public abstract void testInit();
+    
+    /**
+     * Periodic code for common actions should go here.
+     */
+    public abstract void robotPeriodic();
     
     /**
      * Periodic code for disabled mode should go here.
